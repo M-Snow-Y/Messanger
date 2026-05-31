@@ -1,0 +1,85 @@
+﻿@page "/register"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+@using Messanger.Shared.Module;
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="brand-logo">
+            <span class="brand-icon">💬</span>
+        </div>
+        <h1 class="brand-title">IghtuMessenger</h1>
+        <p class="subtitle">Добро пожаловать! Создайте аккаунт.</p>
+
+        <div class="input-group">
+            <label>Номер телефона</label>
+            <input type="tel" @bind="phone" placeholder="+7 (999) 000-00-00" />
+        </div>
+
+        <div class="input-group">
+            <label>Имя пользователя</label>
+            <input type="text" @bind="username" placeholder="Например, ivan_student" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">@errorMessage</div>
+        }
+
+        <button class="btn-primary" @onclick="RegisterUser" disabled="@isSubmitting">
+            @(isSubmitting ? "Регистрация..." : "Продолжить")
+        </button>
+    </div>
+</div>
+
+@code {
+    private string phone = "";
+    private string username = "";
+    private string errorMessage = "";
+    private bool isSubmitting = false;
+
+    private async Task RegisterUser()
+    {
+        if (string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(username))
+        {
+            errorMessage = "Заполните все поля";
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = "";
+
+        try
+        {
+            var request = new { PhoneNumber = phone, Username = username };
+            
+            var response = await Http.PostAsJsonAsync("api/users/register", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var createdUser = await response.Content.ReadFromJsonAsync<User>();
+                int newUserId = createdUser.Id;
+
+
+                // СОХРАНЯЕМ ID В ПАМЯТЬ
+                Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserId", newUserId);
+
+                
+                Nav.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Ошибка при регистрации на сервере.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Нет связи с сервером.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

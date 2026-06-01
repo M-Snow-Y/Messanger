@@ -1,0 +1,86 @@
+﻿@page "/Reg"
+@page "/"
+@using Messanger.Shared.Module
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="brand-logo">💬</div>
+        <h1 class="brand-title">Messenger BETA</h1>
+        <p class="subtitle">Введите данные для входа или регистрации</p>
+
+        <div class="input-group">
+            <label>Номер телефона</label>
+            <input type="tel" @bind="phone" placeholder="+79990000000" />
+        </div>
+
+        <div class="input-group">
+            <label>Имя пользователя (Никнейм)</label>
+            <input type="text" @bind="username" placeholder="ivan_ivanov" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">@errorMessage</div>
+        }
+
+        <button class="btn-primary" @onclick="RegisterUser" disabled="@isSubmitting">
+            @(isSubmitting ? "Загрузка..." : "Войти / Зарегистрироваться")
+        </button>
+    </div>
+</div>
+
+@code {
+    private string phone = "";
+    private string username = "";
+    private string errorMessage = "";
+    private bool isSubmitting = false;
+
+    private async Task RegisterUser()
+    {
+        if (string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(username))
+        {
+            errorMessage = "Пожалуйста, заполните все поля";
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = "";
+
+        try
+        {
+            var request = new User { PhoneNumber = phone, UserName = username };
+
+            var response = await Http.PostAsJsonAsync("api/users/register", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var userFromServer = await response.Content.ReadFromJsonAsync<User>();
+
+                if (userFromServer != null && userFromServer.Id > 0)
+                {
+                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserId", userFromServer.Id);
+                    Nav.NavigateTo("/chat");
+                }
+                else
+                {
+                    errorMessage = "Ошибка: Сервер вернул некорректный ID.";
+                }
+            }
+            else
+            {
+                errorMessage = "Не удалось авторизоваться на сервере.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Нет связи с сервером: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

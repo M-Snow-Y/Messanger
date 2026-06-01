@@ -1,5 +1,7 @@
 <Solution>
-  <Project Path="D:/Messanger/Client/Client.csproj" Id="73538cdc-eb64-48ce-a5d7-f7c56e2f4942" />
+  <Project Path="D:/Messanger/Client/Client.csproj" Id="73538cdc-eb64-48ce-a5d7-f7c56e2f4942">
+    <Deploy Solution="Debug|*" />
+  </Project>
   <Project Path="D:/Messanger/Server/Server.csproj" Id="8ea58d0a-a771-4a1b-8f3e-e65c1b44c004" />
   <Project Path="D:/Messanger/Shared/Shared.csproj" Id="23f27c1d-e036-4d89-ab2e-b37b10e8fcab" />
 </Solution>

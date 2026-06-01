@@ -1,0 +1,236 @@
+﻿@page "/chat"
+
+@using Messanger.Shared.Module
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="messenger-container">
+    
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Мои Чаты</h3>
+        </div>
+
+        <div class="create-group-box">
+            <input type="text" @bind="newChatName" placeholder="Название новой группы..." />
+            <button @onclick="CreateNewGroup">➕ Создать</button>
+        </div>
+
+        <div class="chat-list">
+            @if (chats != null && chats.Any())
+            {
+                @foreach (var chat in chats)
+                {
+                    <div class="chat-item @(selectedChat?.Id == chat.Id ? "active" : "")" @onclick="() => SelectChat(chat)">
+                        <div class="chat-avatar">@chat.Name.FirstOrDefault()</div>
+                        <div class="chat-info">
+                            <div class="chat-name">@chat.Name</div>
+                        </div>
+                    </div>
+                }
+            }
+            else if (chats != null && !chats.Any())
+            {
+                <div class="empty-state">У вас пока нет чатов. Создайте первый чат выше!</div>
+            }
+            else
+            {
+                <div class="empty-state">Загрузка списков чатов...</div>
+            }
+        </div>
+    </div>
+
+    <div class="chat-area">
+        @if (selectedChat != null)
+        {
+            <div class="chat-header">
+                <div class="chat-avatar">@selectedChat.Name.FirstOrDefault()</div>
+                <div class="chat-header-title">@selectedChat.Name</div>
+            </div>
+
+            <div class="messages-list">
+                @if (currentMessages != null)
+                {
+                    @foreach (var msg in currentMessages)
+                    {
+                        <div class="message-wrapper @(msg.SenderId == currentUserId ? "my-message" : "other-message")">
+                            <div class="message-bubble">
+                                @if (!string.IsNullOrEmpty(msg.ImageUrl))
+                                {
+                                    <img src="@(Http.BaseAddress + msg.ImageUrl.TrimStart('/'))" class="message-image" alt="photo" />
+                                }
+                                @if (!string.IsNullOrEmpty(msg.Text))
+                                {
+                                    <div class="message-text">@msg.Text</div>
+                                }
+                                <div class="message-time">@msg.CreatedAt.ToString("HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="input-panel">
+                <label class="attach-btn">
+                    📷
+                    <InputFile OnChange="HandlePhotoUpload" style="display:none;" />
+                </label>
+                
+                <input type="text" @bind="newMessageText" placeholder="Напишите сообщение..." @onkeyup="HandleKeyUp" />
+                <button class="send-btn" @onclick="SendMessage">➔</button>
+            </div>
+        }
+        else
+        {
+            <div class="no-chat-selected">
+                <div class="no-chat-icon">💬</div>
+                <h3>Добро пожаловать</h3>
+                <p>Выберите чат слева или создайте новую группу, чтобы начать общение.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private int currentUserId;
+    private List<Messanger.Shared.Module.Chat>? chats;
+    private Messanger.Shared.Module.Chat selectedChat = new();
+    private List<Message>? currentMessages;
+    
+    private string newChatName = "";
+    private string newMessageText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUserId = Microsoft.Maui.Storage.Preferences.Default.Get("SavedUserId", 0);
+
+        if (currentUserId == 0)
+        {
+            Nav.NavigateTo("/Reg");
+            return;
+        }
+
+        await LoadChatsAsync();
+    }
+    private async Task LoadChatsAsync()
+    {
+        try
+        {
+            chats = await Http.GetFromJsonAsync<List<Messanger.Shared.Module.Chat>>($"api/chats/user/{currentUserId}");
+        }
+        catch (Exception)
+        {
+            chats = new List<Messanger.Shared.Module.Chat>();
+        }
+    }
+
+    private async Task SelectChat(Messanger.Shared.Module.Chat chat)
+    {
+        selectedChat = chat;
+        currentMessages = null;
+        
+        try
+        {
+            currentMessages = await Http.GetFromJsonAsync<List<Message>>($"api/messages/chat/{chat.Id}");
+        }
+        catch (Exception)
+        {
+            currentMessages = new List<Message>();
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(newMessageText) || selectedChat == null) return;
+
+        var msg = new Message
+        {
+            ChatId = selectedChat.Id,
+            SenderId = currentUserId,
+            Text = newMessageText
+        };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/messages/send", msg);
+            if (response.IsSuccessStatusCode)
+            {
+                var savedMsg = await response.Content.ReadFromJsonAsync<Message>();
+                if (savedMsg != null)
+                {
+                    currentMessages?.Add(savedMsg);
+                }
+                newMessageText = "";
+                StateHasChanged();
+            }
+        }
+        catch (Exception) { }
+    }
+
+    private async Task CreateNewGroup()
+    {
+        if (string.IsNullOrWhiteSpace(newChatName)) return;
+
+        var newChat = new Messanger.Shared.Module.Chat { Name = newChatName };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/chats/create", newChat);
+            if (response.IsSuccessStatusCode)
+            {
+                newChatName = "";
+                await LoadChatsAsync();
+            }
+        }
+        catch (Exception) { }
+    }
+
+    private async Task HandlePhotoUpload(InputFileChangeEventArgs e)
+    {
+        if (selectedChat == null) return;
+
+        try
+        {
+            var file = e.File;
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10));
+            content.Add(fileContent, "file", file.Name);
+
+            // 1. Загружаем файл на сервер
+            var response = await Http.PostAsync("api/messages/upload-photo", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<UploadResult>();
+                
+                if (result != null && !string.IsNullOrEmpty(result.Url))
+                {
+                    var msg = new Message
+                    {
+                        ChatId = selectedChat.Id,
+                        SenderId = currentUserId,
+                        Text = "",
+                        ImageUrl = result.Url
+                    };
+                    
+                    var sendResponse = await Http.PostAsJsonAsync("api/messages/send", msg);
+                    if (sendResponse.IsSuccessStatusCode)
+                    {
+                        var savedMsg = await sendResponse.Content.ReadFromJsonAsync<Message>();
+                        if (savedMsg != null) currentMessages?.Add(savedMsg);
+                    }
+                }
+            }
+        }
+        catch (Exception) { }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SendMessage();
+    }
+
+    private class UploadResult { public string Url { get; set; } = ""; }
+}

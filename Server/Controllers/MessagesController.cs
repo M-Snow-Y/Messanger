@@ -1,43 +1,60 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Messanger.Server.Data;
 using Messanger.Shared.Module;
-using Shared.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace Massanger.Server.Controllers;
-
-[ApiController]
 [Route("api/[controller]")]
-
-
+[ApiController]
 public class MessagesController : ControllerBase
 {
-    private readonly IMessanger _messangesServices;
-    public MessagesController(IMessanger messanger)
+    private readonly AppDbContext _context;
+    private readonly IWebHostEnvironment _env;
+
+    public MessagesController(AppDbContext context, IWebHostEnvironment env)
     {
-        _messangesServices = messanger;
-    }
-    [HttpGet("group/{userId}")]
-    public async Task<ActionResult<List<Chat>>> GetGroup(int userId)
-    {
-        var _getGroup = await _messangesServices.GetAllMessageGroupAsync(userId);
-        return Ok(_getGroup);
-    }
-    [HttpGet("people/{userId}")]
-    public async Task<ActionResult<List<Chat>>> GetPersonalChat(int userId) 
-    {
-        var _getPersonalChat = await _messangesServices.GetAllMessagePeopleAsync(userId);
-        return Ok(_getPersonalChat);
-    }
-    [HttpGet("chat/{chatId}")]
-    public async Task<ActionResult<List<Message>>> GetChatMessage(int chatId)
-    {
-        var _message = await _messangesServices.GetChatMessageAsync(chatId);
-        return Ok(_message);
+        _context = context;
+        _env = env;
     }
 
-    [HttpGet("send")]
-    public async Task<ActionResult<Message>> SendMessage([FromBody] Message request)
+    [HttpGet("chat/{chatId}")]
+    public async Task<IActionResult> GetChatMessages(int chatId)
     {
-        var _sendMessage = await _messangesServices.SendMessageAsync(request);
-        return Ok(_sendMessage);
+        var messages = await _context.Messages
+            .Where(m => m.ChatId == chatId)
+            .OrderBy(m => m.CreatedAt)
+            .ToListAsync();
+
+        return Ok(messages);
+    }
+
+    [HttpPost("send")]
+    public async Task<IActionResult> SendMessage([FromBody] Message request)
+    {
+        request.CreatedAt = DateTime.Now;
+        _context.Messages.Add(request);
+        await _context.SaveChangesAsync();
+        return Ok(request);
+    }
+
+    [HttpPost("upload-photo")]
+    public async Task<IActionResult> UploadPhoto(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Файл не выбран");
+
+        var uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "wwwroot", "uploads");
+        if (!Directory.Exists(uploadsFolder))
+            Directory.CreateDirectory(uploadsFolder);
+
+        var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var fileUrl = $"/uploads/{uniqueFileName}";
+        return Ok(new { url = fileUrl });
     }
 }

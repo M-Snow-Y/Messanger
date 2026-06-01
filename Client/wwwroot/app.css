@@ -306,10 +306,11 @@ html, body {
 
 /* Кнопка */
 .btn-primary {
-    width: 100%;
+    width: 45%;
     background-color: #2a5298;
     color: white;
     border: none;
+    margin: 1%;
     padding: 1rem;
     font-size: 1rem;
     font-weight: 600;

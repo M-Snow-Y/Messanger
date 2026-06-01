@@ -15,6 +15,10 @@ namespace Client
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
+            builder.Services.AddScoped(sp => new HttpClient
+            {
+                BaseAddress = new Uri("http://localhost:5050/")
+            });
             builder.Services.AddRefitClient<IMessanger>().ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:7001"));
             builder.Services.AddMauiBlazorWebView();
 

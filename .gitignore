@@ -1,1 +1,14 @@
-.vs/
+# Фильтры для .NET / Visual Studio
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+
+# Кэш и логи WebView2
+*.WebView2/
+EBWebView/
+
+# Android-мусор сборки
+*.apk
+*.aar
+*.clog

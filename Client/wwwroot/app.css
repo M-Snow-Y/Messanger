@@ -284,7 +284,7 @@ html, body {
         border: 1px solid #ddd;
         border-radius: 10px;
         font-size: 1rem;
-        box-sizing: border-box; /* Чтобы padding не ломал ширину */
+        box-sizing: border-box;
         transition: border-color 0.3s ease;
     }
 
@@ -332,3 +332,21 @@ html, body {
         background-color: #95a5a6;
         cursor: not-allowed;
     }
+
+
+.create-group-box {
+    border-radius: 22px;
+    margin: 3%;
+}
+
+.bth-create-group {
+    width: 22%;
+    background-color: #2a5298;
+    color: white;
+    border: none;
+    margin: 1%;
+    font-weight: 60;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}

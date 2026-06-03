@@ -7,32 +7,19 @@
       "RelativeMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|solutionrelative:client\\components\\pages\\chat.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{23F27C1D-E036-4D89-AB2E-B37B10E8FCAB}|Shared\\Shared.csproj|d:\\messanger\\shared\\module\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{23F27C1D-E036-4D89-AB2E-B37B10E8FCAB}|Shared\\Shared.csproj|solutionrelative:shared\\module\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|d:\\messanger\\client\\wwwroot\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|solutionrelative:client\\wwwroot\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|d:\\messanger\\client\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|solutionrelative:client\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{8EA58D0A-A771-4A1B-8F3E-E65C1B44C004}|Server\\Server.csproj|d:\\messanger\\server\\controllers\\messagescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8EA58D0A-A771-4A1B-8F3E-E65C1B44C004}|Server\\Server.csproj|solutionrelative:server\\controllers\\messagescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{8EA58D0A-A771-4A1B-8F3E-E65C1B44C004}|Server\\Server.csproj|d:\\messanger\\server\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8EA58D0A-A771-4A1B-8F3E-E65C1B44C004}|Server\\Server.csproj|solutionrelative:server\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/Messanger/True/SqlTable/dbo.Users.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|d:\\messanger\\client\\components\\pages\\reg.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|solutionrelative:client\\components\\pages\\reg.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{8EA58D0A-A771-4A1B-8F3E-E65C1B44C004}|Server\\Server.csproj|d:\\messanger\\server\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{8EA58D0A-A771-4A1B-8F3E-E65C1B44C004}|Server\\Server.csproj|solutionrelative:server\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|d:\\messanger\\client\\components\\pages\\enter.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|solutionrelative:client\\components\\pages\\enter.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|d:\\messanger\\client\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{73538CDC-EB64-48CE-A5D7-F7C56E2F4942}|Client\\Client.csproj|solutionrelative:client\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,74 +29,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "MessagesController.cs",
-              "DocumentMoniker": "D:\\Messanger\\Server\\Controllers\\MessagesController.cs",
-              "RelativeDocumentMoniker": "Server\\Controllers\\MessagesController.cs",
-              "ToolTip": "D:\\Messanger\\Server\\Controllers\\MessagesController.cs",
-              "RelativeToolTip": "Server\\Controllers\\MessagesController.cs",
-              "ViewState": "AgIAABwAAAAAAAAAAAAcwCIAAAAqAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-01T18:45:57.077Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "User.cs",
-              "DocumentMoniker": "D:\\Messanger\\Shared\\Module\\User.cs",
-              "RelativeDocumentMoniker": "Shared\\Module\\User.cs",
-              "ToolTip": "D:\\Messanger\\Shared\\Module\\User.cs",
-              "RelativeToolTip": "Shared\\Module\\User.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-01T18:24:16.567Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "UserController.cs",
-              "DocumentMoniker": "D:\\Messanger\\Server\\Controllers\\UserController.cs",
-              "RelativeDocumentMoniker": "Server\\Controllers\\UserController.cs",
-              "ToolTip": "D:\\Messanger\\Server\\Controllers\\UserController.cs",
-              "RelativeToolTip": "Server\\Controllers\\UserController.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAAAxwBYAAAAeAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-01T18:22:36.009Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "D:\\Messanger\\Server\\appsettings.json",
-              "RelativeDocumentMoniker": "Server\\appsettings.json",
-              "ToolTip": "D:\\Messanger\\Server\\appsettings.json",
-              "RelativeToolTip": "Server\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-01T17:42:06.029Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "MauiProgram.cs",
-              "DocumentMoniker": "D:\\Messanger\\Client\\MauiProgram.cs",
-              "RelativeDocumentMoniker": "Client\\MauiProgram.cs",
-              "ToolTip": "D:\\Messanger\\Client\\MauiProgram.cs",
-              "RelativeToolTip": "Client\\MauiProgram.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAQwA0AAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-01T17:22:13.859Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -118,34 +39,63 @@
               "RelativeDocumentMoniker": "Client\\Components\\Pages\\Chat.razor",
               "ToolTip": "D:\\Messanger\\Client\\Components\\Pages\\Chat.razor",
               "RelativeToolTip": "Client\\Components\\Pages\\Chat.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAJoAAAAAAAAAAAAAAH0AAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-05-31T18:14:01.879Z",
+              "IsPinned": true,
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "Enter.razor",
-              "DocumentMoniker": "D:\\Messanger\\Client\\Components\\Pages\\Enter.razor",
-              "RelativeDocumentMoniker": "Client\\Components\\Pages\\Enter.razor",
-              "ToolTip": "D:\\Messanger\\Client\\Components\\Pages\\Enter.razor",
-              "RelativeToolTip": "Client\\Components\\Pages\\Enter.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAASAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-01T14:22:58.905Z"
+              "DocumentIndex": 1,
+              "Title": "app.css",
+              "DocumentMoniker": "D:\\Messanger\\Client\\wwwroot\\app.css",
+              "RelativeDocumentMoniker": "Client\\wwwroot\\app.css",
+              "ToolTip": "D:\\Messanger\\Client\\wwwroot\\app.css",
+              "RelativeToolTip": "Client\\wwwroot\\app.css",
+              "ViewState": "AgIAADsBAAAAAAAAAAAAADsBAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-06-02T13:58:09.481Z",
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 2,
+              "Title": "dbo.Users [\u0414\u0430\u043D\u043D\u044B\u0435]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/Messanger/True/SqlTable/dbo.Users.sql",
+              "ToolTip": "dbo.Users [\u0414\u0430\u043D\u043D\u044B\u0435]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-06-03T10:11:19.145Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Reg.razor",
               "DocumentMoniker": "D:\\Messanger\\Client\\Components\\Pages\\Reg.razor",
               "RelativeDocumentMoniker": "Client\\Components\\Pages\\Reg.razor",
               "ToolTip": "D:\\Messanger\\Client\\Components\\Pages\\Reg.razor",
               "RelativeToolTip": "Client\\Components\\Pages\\Reg.razor",
-              "ViewState": "AgIAADEAAAAAAAAAAAAAAA8AAABFAAAAAAAAAA==",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAcwBMAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-31T15:46:23.204Z"
+              "WhenOpened": "2026-06-02T14:05:52.331Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "index.html",
+              "DocumentMoniker": "D:\\Messanger\\Client\\wwwroot\\index.html",
+              "RelativeDocumentMoniker": "Client\\wwwroot\\index.html",
+              "ToolTip": "D:\\Messanger\\Client\\wwwroot\\index.html",
+              "RelativeToolTip": "Client\\wwwroot\\index.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-06-02T13:58:38.748Z"
             }
           ]
         }

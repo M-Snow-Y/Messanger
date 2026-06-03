@@ -12,12 +12,14 @@
         <div class="sidebar-header">
             <h3>Мои Чаты</h3>
         </div>
-
-        <div class="create-group-box">
-            <input type="text" @bind="newChatName" placeholder="Название новой группы..." />
-            <button @onclick="CreateNewGroup">➕ Создать</button>
-        </div>
-
+            <div class="create-group-box">
+                <input type="text" @bind="newChatName" placeholder="Название новой группы..." />
+                <button @onclick="CreateNewChatPerson" class="bth-create-group">➕ Создать</button>
+            </div>
+@*         <div class="create-group-box">
+            <input type="text" @bind="newChatName" placeholder="Новый чат..." />
+            <button @onclick="CreateNewGroup" class="bth-create-group">➕ Создать</button>
+        </div> *@
         <div class="chat-list">
             @if (chats != null && chats.Any())
             {
@@ -39,6 +41,10 @@
             {
                 <div class="empty-state">Загрузка списков чатов...</div>
             }
+        </div>
+        <div style="display:flex; justify-content:flex-end; border-radius: 10px;">
+            <input type="text" @bind="newChatName" placeholder="Название новой группы..." />
+            <button @onclick="CreateNewGroup" class="bth-create-group">➕ Создать</button>
         </div>
     </div>
 
@@ -98,13 +104,13 @@
     private List<Messanger.Shared.Module.Chat>? chats;
     private Messanger.Shared.Module.Chat selectedChat = new();
     private List<Message>? currentMessages;
-    
+
     private string newChatName = "";
     private string newMessageText = "";
 
     protected override async Task OnInitializedAsync()
     {
-        currentUserId = Microsoft.Maui.Storage.Preferences.Default.Get("SavedUserId", 0);
+        currentUserId = Microsoft.Maui.Storage.Preferences.Default.Get("SavedUserId",0);
 
         if (currentUserId == 0)
         {
@@ -114,6 +120,12 @@
 
         await LoadChatsAsync();
     }
+
+    private async Task CreateNewChatPerson()
+    {
+        var _person = 0;
+    }
+
     private async Task LoadChatsAsync()
     {
         try

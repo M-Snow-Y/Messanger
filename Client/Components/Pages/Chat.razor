@@ -1,0 +1,273 @@
+﻿@page "/chat"
+@using Client.Services
+@using Messanger.Shared.Module
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject IChatService ChatService
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+@implements IDisposable
+
+
+<div class="app-layout">
+    <!-- Боковая панель: список чатов -->
+    <div class="sidebar @(isMobileChatActive ? "hidden-on-mobile" : "")">
+        <div class="sidebar-header">
+            <div class="create-chat-form">
+                <input class="create-chat-input" 
+                       placeholder="Название нового чата..." 
+                       @bind="newChatName" 
+                       @bind:event="oninput" 
+                       @onkeyup="HandleCreateChatKey" />
+                       <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:13px;" @onclick="CreateChat">>+</button>
+            </div>
+        </div>
+
+        <ul class="chats-list">
+            @foreach (var chat in ChatService.Chats)
+            {
+                <li class="chat-item @(ChatService.ActiveChatId == chat.Id ? "active" : "")"
+                    @onclick="() => SelectChat(chat.Id)">
+                    <span class="chat-name">@chat.Name</span>
+                </li>
+            }
+        </ul>
+        
+    </div>
+
+    <!-- Область активного чата -->
+    <div class="chat-area">
+        @if (ChatService.ActiveChatId != null)
+        {
+            <div class="chat-header">
+                <button class="btn-icon btn-back-to-chats" 
+                        style="display:none;" 
+                        @onclick="BackToChatsList">
+                    ←
+                </button>
+                <span class="chat-header-title">@activeChatName</span>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                @foreach (var msg in ChatService.CurrentMessages)
+                {
+                    bool isMy = msg.SenderId == currentUserId;
+                    <div class="message-row @(isMy ? "my-message" : "other-message")">
+                        <div class="message-bubble">
+                            @if (!isMy && !string.IsNullOrEmpty(msg.SenderName))
+                            {
+                                <span class="sender-name">@msg.SenderName</span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(msg.ImageUrl))
+                            {
+                                <img src="@GetFullImageUrl(msg.ImageUrl)" class="chat-image" alt="Изображение" @onclick="() => OpenImagePreview(msg.ImageUrl)" />
+                            }
+
+                            @if (!string.IsNullOrEmpty(msg.Text))
+                            {
+                                <div class="message-text">@msg.Text</div>
+                            }
+
+                            <div class="message-meta">
+                                <span class="message-time">@msg.CreatedAt.ToLocalTime().ToString("HH:mm")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Панель ввода сообщения -->
+            <div class="chat-input-bar">
+                <label class="btn-icon" title="Прикрепить фото">
+                    📷
+                    <InputFile OnChange="HandlePhotoSelected" style="display:none;" accept="image/*" />
+                </label>
+
+                <input class="chat-input" 
+                       placeholder="Напишите сообщение..." 
+                       @bind="messageText" 
+                       @bind:event="oninput" 
+                       @onkeyup="HandleMessageKeyPress" />
+
+                <button class="btn-send" @onclick="SendMessage" title="Отправить">
+                    ➤
+                </button>
+            </div>
+        }
+        else
+        {
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--tg-text-secondary);">
+                Выберите чат для начала общения
+            </div>
+        }
+    </div>
+</div>
+
+@if (isImageOpen)
+{
+    <div class="lightbox-overlay" @onclick="CloseImagePreview">
+        <div class="lightbox-content" @onclick:stopPropagation="true">
+            <button class="lightbox-close-btn" @onclick="CloseImagePreview" title="Закрыть">✕</button>
+            <img src="@previewImageUrl" class="lightbox-image" alt="Просмотр во весь экран" />
+        </div>
+    </div>
+}
+
+@code {
+    private int currentUserId;
+    private string newChatName = "";
+    private string messageText = "";
+    private string activeChatName = "";
+    private bool isMobileChatActive = false;
+
+    // Состояние Lightbox
+    private bool isImageOpen = false;
+    private string previewImageUrl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUserId = Microsoft.Maui.Storage.Preferences.Default.Get("SavedUserId", 0);
+        if (currentUserId == 0)
+        {
+            Nav.NavigateTo("/Reg");
+            return;
+        }
+
+        ChatService.OnChange += HandleStateChanged;
+        await ChatService.LoadChatsAsync(currentUserId);
+        ChatService.StartPeriodicPolling(currentUserId, TimeSpan.FromSeconds(3));
+    }
+
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectChat(int chatId)
+    {
+        await ChatService.SelectChatAsync(chatId);
+        activeChatName = ChatService.Chats.FirstOrDefault(c => c.Id == chatId)?.Name ?? "Чат";
+        isMobileChatActive = true;
+        await ScrollToBottom();
+    }
+
+    private void BackToChatsList()
+    {
+        isMobileChatActive = false;
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(messageText) || ChatService.ActiveChatId == null) return;
+        var text = messageText;
+        messageText = "";
+
+        await ChatService.SendMessageAsync(ChatService.ActiveChatId.Value, currentUserId, text);
+        await ScrollToBottom();
+    }
+
+    private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
+    {
+        if (ChatService.ActiveChatId == null) return;
+        var file = e.File;
+        if (file == null) return;
+
+        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+        var relativeUrl = await ChatService.UploadPhotoAsync(stream, file.Name);
+
+        if (!string.IsNullOrEmpty(relativeUrl))
+        {
+            await ChatService.SendMessageAsync(ChatService.ActiveChatId.Value, currentUserId, "", relativeUrl);
+            await ScrollToBottom();
+        }
+    }
+
+    private void OpenImagePreview(string relativeUrl)
+    {
+        previewImageUrl = GetMediaUrl(relativeUrl);
+        isImageOpen = true;
+    }
+
+    private void CloseImagePreview()
+    {
+        isImageOpen = false;
+        previewImageUrl = "";
+    }
+
+    private string GetMediaUrl(string? relativeUrl)
+    {
+        if (string.IsNullOrEmpty(relativeUrl)) return "";
+        string baseAddr = DeviceInfo.Platform == DevicePlatform.Android 
+            ? "http://10.0.2.2:5050/" 
+            : "http://localhost:5050/";
+        return $"{baseAddr}{relativeUrl.TrimStart('/')}";
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(50);
+        await JS.InvokeVoidAsync("eval", "const c = document.getElementById('messagesContainer'); if(c) c.scrollTop = c.scrollHeight;");
+    }
+
+    private async Task HandleCreateChatKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await CreateChat();
+    }
+
+    private async Task HandleMessageKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SendMessage();
+    }
+
+private async Task CreateChat()
+{
+    if (string.IsNullOrWhiteSpace(newChatName)) return;
+
+    var chatToCreate = newChatName.Trim();
+    newChatName = "";
+
+    try
+    {
+        // Отправляем анонимный объект - никаких конфликтов типов!
+        var response = await Http.PostAsJsonAsync("api/Chat/create", new 
+        { 
+            Name = chatToCreate, 
+            IsGroup = true,
+            CreatedAt = DateTime.UtcNow 
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            await ChatService.LoadChatsAsync(currentUserId);
+            StateHasChanged();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Ошибка создания чата: {ex.Message}");
+    }
+}
+
+    public void Dispose()
+    {
+        ChatService.OnChange -= HandleStateChanged;
+    }
+private string GetFullImageUrl(string? url)
+{
+    if (string.IsNullOrWhiteSpace(url)) return "";
+
+    url = url.Replace("\\", "/");
+
+    if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+        url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+    {
+        return url;
+    }
+
+    string baseAddress = "http://localhost:5050/";
+    return $"{baseAddress}{url.TrimStart('/')}";
+}
+}

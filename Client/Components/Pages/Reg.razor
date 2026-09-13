@@ -1,0 +1,194 @@
+﻿@page "/Reg"
+@page "/"
+@using Messanger.Shared.Module
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="brand-logo">💬</div>
+        <h1 class="brand-title">Messenger BETA</h1>
+        <p class="subtitle">@(isLoginMode ? "Вход в аккаунт" : "Создание нового профиля")</p>
+
+        <!-- Переключатель Вход / Регистрация -->
+        <div class="auth-tabs">
+            <button class="auth-tab @(isLoginMode ? "active" : "")" @onclick="() => SetMode(true)">Вход</button>
+            <button class="auth-tab @(!isLoginMode ? "active" : "")" @onclick="() => SetMode(false)">Регистрация</button>
+        </div>
+
+        <!-- Поле: Телефон -->
+        <div class="input-group">
+            <label>Номер телефона</label>
+            <input type="tel" 
+                   @bind="phone" 
+                   @bind:event="oninput" 
+                   placeholder="+7 (999) 000-00-00" 
+                   @onkeyup="HandleKeyUp" />
+        </div>
+
+        <!-- Поле: Никнейм (только при регистрации) -->
+        @if (!isLoginMode)
+        {
+            <div class="input-group">
+                <label>Имя пользователя (Никнейм)</label>
+                <input type="text" 
+                       @bind="username" 
+                       @bind:event="oninput" 
+                       placeholder="ivan_ivanov" 
+                       maxlength="20"
+                       @onkeyup="HandleKeyUp" />
+            </div>
+        }
+
+        <!-- Поле: Пароль -->
+        <div class="input-group">
+            <label>Пароль</label>
+            <div class="password-wrapper">
+                <input type="@(showPassword ? "text" : "password")" 
+                       @bind="password" 
+                       @bind:event="oninput" 
+                       placeholder="••••••••" 
+                       @onkeyup="HandleKeyUp" />
+                <button type="button" class="btn-toggle-pwd" @onclick="() => showPassword = !showPassword">
+                    @(showPassword ? "👁️" : "🔒")
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">@errorMessage</div>
+        }
+
+        <button class="btn-primary" @onclick="HandleSubmit" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span>Подключение к серверу...</span>
+            }
+            else
+            {
+                <span>@(isLoginMode ? "Войти в чат" : "Зарегистрироваться")</span>
+            }
+        </button>
+    </div>
+</div>
+
+@code {
+
+    private string phone = "";
+    private string username = "";
+    private string password = "";
+    private string errorMessage = "";
+    private bool isSubmitting = false;
+    private bool isLoginMode = true;
+    private bool showPassword = false;
+
+
+    private void SetMode(bool login)
+    {
+        isLoginMode = login;
+        errorMessage = "";
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = "";
+
+        var cleanPhone = phone.Trim();
+        var cleanPass = password.Trim();
+
+        if (string.IsNullOrWhiteSpace(cleanPhone))
+        {
+            errorMessage = "Введите номер телефона";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(cleanPass))
+        {
+            errorMessage = "Введите пароль";
+            return;
+        }
+
+        if (!isLoginMode && string.IsNullOrWhiteSpace(username))
+        {
+            errorMessage = "Укажите имя пользователя (никнейм)";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            string passHash = ComputeSha256(cleanPass);
+
+            var payload = new User
+            {
+                PhoneNumber = cleanPhone,
+                UserName = isLoginMode ? "" : username.Trim(),
+                PasswordHash = passHash
+            };
+
+            string endpoint = isLoginMode ? "api/users/login" : "api/users/register";
+
+            var response = await Http.PostAsJsonAsync(endpoint, payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var user = await response.Content.ReadFromJsonAsync<User>();
+
+                if (user != null && user.Id > 0)
+                {
+                    // Сохраняем ID и имя в сессию приложения
+                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserId", user.Id);
+                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserName", user.UserName);
+                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedPhone", user.PhoneNumber);
+
+                    // Успешно! Переходим в чат
+                    Nav.NavigateTo("/chat");
+                }
+            }
+            else
+            {
+                // ПОЛУЧАЕМ ТОЧНЫЙ ТЕКСТ ОШИБКИ ОТ СЕРВЕРА
+                // (например, "Неверный пароль" или "Пользователь не найден")
+                var serverError = await response.Content.ReadAsStringAsync();
+
+                if (!string.IsNullOrWhiteSpace(serverError))
+                {
+                    errorMessage = serverError;
+                }
+                else
+                {
+                    errorMessage = isLoginMode ? "Ошибка входа" : "Ошибка регистрации";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Нет связи с сервером: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private static string ComputeSha256(string rawData)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
+        var sb = new System.Text.StringBuilder();
+        foreach (var b in bytes)
+        {
+            sb.Append(b.ToString("x2"));
+        }
+        return sb.ToString();
+    }
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSubmit();
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Client",
+    "\\Client\\Components",
+    "\\Client\\Components\\Pages",
+    "\\Server",
+    "\\Server\\Controllers"
+  ],
+  "SelectedNode": "\\Server\\Server.csproj",
+  "PreviewInSolutionExplorer": false
+}

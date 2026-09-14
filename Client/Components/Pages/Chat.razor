@@ -2,7 +2,7 @@
 @using Client.Services
 @using Messanger.Shared.Module
 @using Microsoft.AspNetCore.Components.Forms
-
+@inject ThemeService ThemeService   
 @inject IChatService ChatService
 @inject NavigationManager Nav
 @inject HttpClient Http
@@ -21,8 +21,10 @@
                        @bind="newChatName" 
                        @bind:event="oninput" 
                        @onkeyup="HandleCreateChatKey" />
-                       <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:13px;" @onclick="CreateChat">>+</button>
+                       <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:20px;" @onclick="CreateChat">+</button>
             </div>
+            <button class="bth-changecolor" style="border-radius:8px; width:auto; padding:0 12px; font-size:12px;"
+            onclick="ToggleAppTheme">@(ThemeService.IsDarkTheme ? "☀️" : "🌙")</button>
         </div>
 
         <ul class="chats-list">
@@ -63,7 +65,8 @@
 
                             @if (!string.IsNullOrEmpty(msg.ImageUrl))
                             {
-                                <img src="@GetFullImageUrl(msg.ImageUrl)" class="chat-image" alt="Изображение" @onclick="() => OpenImagePreview(msg.ImageUrl)" />
+                                <img src="@GetFullImageUrl(msg.ImageUrl)" class="chat-image" alt="Изображение" 
+                                @onclick="() => OpenImagePreview(msg.ImageUrl)" />
                             }
 
                             @if (!string.IsNullOrEmpty(msg.Text))
@@ -269,5 +272,11 @@ private string GetFullImageUrl(string? url)
 
     string baseAddress = "http://localhost:5050/";
     return $"{baseAddress}{url.TrimStart('/')}";
+}
+
+private void ToggleAppTheme()
+{
+    ThemeService.ToggleTheme();
+    StateHasChanged();
 }
 }

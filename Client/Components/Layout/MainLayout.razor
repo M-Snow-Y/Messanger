@@ -1,5 +1,21 @@
-﻿@inherits LayoutComponentBase
+﻿@using Client.Services
+@inject ThemeService ThemeService
+@inherits LayoutComponentBase
+@implements IDisposable
 
-<main>
-	@Body
-</main>
+<div class="app-container @(ThemeService.IsDarkTheme ? "theme-dark" : "theme-light")">
+    @Body
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeService.Initialize();
+        ThemeService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= StateHasChanged;
+    }
+}

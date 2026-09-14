@@ -19,6 +19,8 @@
   --tg-time-my: #8caecf;          /* Цвет времени в исходящем */
   --tg-time-other: #708499;       /* Цвет времени во входящем */
   --tg-input-bg: #242f3d;         /* Фон поля ввода сообщения */
+  --tg--color:#ffffff;            /* Цвет текста */
+  --tg--bg--color: #252f3e;
 }
 
 /* Переменные для СВЕТЛОЙ темы */
@@ -38,6 +40,8 @@
   --tg-time-my: #e0f2fe;          /* Светлое время в исходящем */
   --tg-time-other: #9ca3af;       /* Серое время во входящем */
   --tg-input-bg: #f3f4f6;         /* Светло-серый фон поля ввода */
+  --tg--color:#000000;            /* Цвет текста */
+  --tg--bg--color: #c7ced7;
 }
 
 /* Сброс базовых отступов и параметров боксов */
@@ -304,6 +308,8 @@ html, body {
   align-items: center;
   justify-content: space-between;
   transition: background-color 0.15s;
+  color:var(--tg--color);
+  background-color: var(--tg--bg--color);
 }
 
 .chat-item:hover {

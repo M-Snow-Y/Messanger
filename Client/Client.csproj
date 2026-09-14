@@ -78,4 +78,8 @@
       <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+        <AndroidResource Include="Platforms\Android\Resources\xml\network_security_config.xml" />
+    </ItemGroup>
+
 </Project>

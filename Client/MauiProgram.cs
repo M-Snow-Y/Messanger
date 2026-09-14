@@ -14,11 +14,10 @@ public static class MauiProgram
             ? "http://10.0.2.2:5050/" 
             : "http://localhost:5050/";
 
-        builder.Services.AddScoped(sp => new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl),
-            Timeout = TimeSpan.FromSeconds(15)
-        });
+builder.Services.AddScoped(sp => new HttpClient 
+{ 
+    BaseAddress = new Uri(baseUrl) // Твой реальный IPv4!
+});
 
         builder.Services.AddHttpClient<IChatService, ChatService>(client =>
         {
@@ -43,4 +42,8 @@ public static class MauiProgram
 
         return builder.Build();
     }
+
+
+
+
 }

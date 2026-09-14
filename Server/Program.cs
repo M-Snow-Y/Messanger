@@ -42,4 +42,4 @@ using (var scope = app.Services.CreateScope())
     //db.Database.EnsureDeleted(); // 1. Удаляем пустой битый файл базы
     db.Database.EnsureCreated(); // 2. Создаём заново со всеми таблицами Users, Chats, Messages!
 }
-app.Run();
+app.Run("http://0.0.0.0:5050");

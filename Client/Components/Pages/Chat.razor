@@ -4,67 +4,67 @@
 @using Microsoft.AspNetCore.Components.Forms
 @inject ThemeService ThemeService   
 @inject IChatService ChatService
+@inject AuthStorageService AuthStorage
 @inject NavigationManager Nav
 @inject HttpClient Http
 @inject IJSRuntime JS
 
 @implements IDisposable
 
-
 <div class="app-layout">
-    <!-- Боковая панель: список чатов -->
+    <!-- Затемняющий оверлей шторки -->
+    @if (isDrawerOpen)
+    {
+        <div class="drawer-backdrop" @onclick="CloseDrawer"></div>
+    }
+
+    <!-- Выезжающая боковая панель (Drawer) -->
+    <aside class="drawer-panel @(isDrawerOpen ? "open" : "")">
+        <div class="drawer-header">
+            <div class="drawer-title">Настройки и профиль</div>
+            <button class="btn-drawer-close" @onclick="CloseDrawer">✕</button>
+        </div>
+
+        <div class="drawer-body">
+            <!-- Быстрое переключение темы -->
+            <div class="drawer-item" @onclick="() => ThemeService.CycleTheme()">
+                <span class="drawer-item-icon">@ThemeService.ThemeIcon</span>
+                <span>@(ThemeService.ActiveTheme?.Name ?? "Сменить тему")</span>
+            </div>
+
+            <!-- Переход в страницу создания / загрузки тем -->
+            <div class="drawer-item" @onclick='() => { CloseDrawer(); Nav.NavigateTo("/styles"); }'>
+                <span class="drawer-item-icon">🎨</span>
+                <span>Редактор и файлы тем</span>
+            </div>
+
+            <!-- Дополнительные пункты меню -->
+            <div class="drawer-item" @onclick='() => Nav.NavigateTo("/profile")'>
+                <span class="drawer-item-icon">👤</span>
+                <span>Мой профиль</span>
+            </div>
+
+            <div class="drawer-item text-danger" @onclick="Logout">
+                <span class="drawer-item-icon">🚪</span>
+                <span>Выйти из аккаунта</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Левая колонка: список чатов -->
     <div class="sidebar @(isMobileChatActive ? "hidden-on-mobile" : "")">
-        <div class="sidebar-header"><!-- 1. Кнопка открытия панели (три полоски - гамбургер) -->
-<button class="btn-drawer-toggle" @onclick="ToggleDrawer" title="Меню">
-    ☰
-</button>
+        <div class="sidebar-header">
+            <button class="btn-drawer-toggle" @onclick="ToggleDrawer" title="Меню">
+                ☰
+            </button>
 
-<!-- 2. Затемняющий оверлей (при клике на любое место закрывает панель) -->
-@if (isDrawerOpen)
-{
-    <div class="drawer-backdrop" @onclick="CloseDrawer"></div>
-}
-
-<!-- 3. Сама выезжающая боковая панель -->
-<aside class="drawer-panel @(isDrawerOpen ? "open" : "")">
-    <div class="drawer-header">
-        <div class="drawer-title">Настройки и профиль</div>
-        <button class="btn-drawer-close" @onclick="CloseDrawer">✕</button>
-    </div>
-
-    <div class="drawer-body">
-        <!-- Смена темы -->
-        <div class="drawer-item" @onclick="ToggleAppTheme">
-            <span class="drawer-item-icon">@(ThemeService.IsDarkTheme ? "☀️" : "🌙")</span>
-            <span>@(ThemeService.IsDarkTheme ? "Светлая тема" : "Тёмная тема")</span>
-        </div>
-
-        <!-- Дополнительные пункты меню -->
-        <div class="drawer-item" @onclick="OpenProfile">
-            <span class="drawer-item-icon">👤</span>
-            <span>Мой профиль</span>
-        </div>
-
-        <div class= "drawer-item" @onclick="StyleSetting">
-            <span class = "drawer-item-icon">🤍</span>
-            <span class = "">Настройка своего стиля</span>
-        </div>
-
-        <div class="drawer-item text-danger" @onclick="Logout">
-            <span class="drawer-item-icon">🚪</span>
-            <span>Выйти из аккаунта</span>
-        </div>
-
-
-    </div>
-</aside>
             <div class="create-chat-form">
                 <input class="create-chat-input" 
                        placeholder="Название нового чата..." 
                        @bind="newChatName" 
                        @bind:event="oninput" 
                        @onkeyup="HandleCreateChatKey" />
-                       <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:20px;" @onclick="CreateChat">+</button>
+                <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:20px;" @onclick="CreateChat">+</button>
             </div>
         </div>
 
@@ -77,10 +77,9 @@
                 </li>
             }
         </ul>
-        
     </div>
 
-    <!-- Область активного чата -->
+    <!-- Правая колонка: область активного чата -->
     <div class="chat-area">
         @if (ChatService.ActiveChatId != null)
         {
@@ -107,7 +106,7 @@
                             @if (!string.IsNullOrEmpty(msg.ImageUrl))
                             {
                                 <img src="@GetFullImageUrl(msg.ImageUrl)" class="chat-image" alt="Изображение" 
-                                @onclick="() => OpenImagePreview(msg.ImageUrl)" />
+                                     @onclick="() => OpenImagePreview(msg.ImageUrl)" />
                             }
 
                             @if (!string.IsNullOrEmpty(msg.Text))
@@ -161,27 +160,17 @@
 }
 
 @code {
-
-// Состояние выезжающей панели
     private bool isDrawerOpen = false;
+
+    private void ToggleDrawer()
+    {
+        isDrawerOpen = !isDrawerOpen;
+    }
 
     private void CloseDrawer()
     {
         isDrawerOpen = false;
     }
-
-    private void OpenProfile()
-    {
-        CloseDrawer();
-        // Твоя логика профиля
-    }
-
-    private void Logout()
-    {
-        CloseDrawer();
-        // Твоя логика выхода
-    }
-
 
     private int currentUserId;
     private string newChatName = "";
@@ -189,7 +178,6 @@
     private string activeChatName = "";
     private bool isMobileChatActive = false;
 
-    // Состояние Lightbox
     private bool isImageOpen = false;
     private string previewImageUrl = "";
 
@@ -288,65 +276,58 @@
         if (e.Key == "Enter") await SendMessage();
     }
 
-private async Task CreateChat()
-{
-    if (string.IsNullOrWhiteSpace(newChatName)) return;
-
-    var chatToCreate = newChatName.Trim();
-    newChatName = "";
-
-    try
+    private async Task CreateChat()
     {
-        // Отправляем анонимный объект - никаких конфликтов типов!
-        var response = await Http.PostAsJsonAsync("api/Chat/create", new 
-        { 
-            Name = chatToCreate, 
-            IsGroup = true,
-            CreatedAt = DateTime.UtcNow 
-        });
+        if (string.IsNullOrWhiteSpace(newChatName)) return;
 
-        if (response.IsSuccessStatusCode)
+        var chatToCreate = newChatName.Trim();
+        newChatName = "";
+
+        try
         {
-            await ChatService.LoadChatsAsync(currentUserId);
-            StateHasChanged();
+            var response = await Http.PostAsJsonAsync("api/Chat/create", new 
+            { 
+                Name = chatToCreate, 
+                IsGroup = true,
+                CreatedAt = DateTime.UtcNow 
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                await ChatService.LoadChatsAsync(currentUserId);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка создания чата: {ex.Message}");
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Ошибка создания чата: {ex.Message}");
-    }
-}
 
     public void Dispose()
     {
         ChatService.OnChange -= HandleStateChanged;
     }
-private string GetFullImageUrl(string? url)
-{
-    if (string.IsNullOrWhiteSpace(url)) return "";
 
-    url = url.Replace("\\", "/");
-
-    if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
-        url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+    private string GetFullImageUrl(string? url)
     {
-        return url;
+        if (string.IsNullOrWhiteSpace(url)) return "";
+
+        url = url.Replace("\\", "/");
+
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        string baseAddress = "http://localhost:5050/";
+        return $"{baseAddress}{url.TrimStart('/')}";
     }
 
-    string baseAddress = "http://localhost:5050/";
-    return $"{baseAddress}{url.TrimStart('/')}";
-}
-
-    private void ToggleAppTheme()
+    private void Logout()
     {
-        ThemeService.ToggleTheme();
-        StateHasChanged();
-    }
-    private void ToggleDrawer()
-    {
-        isDrawerOpen = !isDrawerOpen;
-    }
-    private void StyleSetting(){
-        Nav.NavigateTo("/SettingStyle");
+        AuthStorage.Logout();
+        Nav.NavigateTo("/");
     }
 }

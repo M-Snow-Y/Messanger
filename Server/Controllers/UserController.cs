@@ -17,13 +17,13 @@ public class UsersController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> AuthUser([FromBody] User request)
     {
-        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == request.UserName);
         if (existingUser != null) return Ok(existingUser);
 
         var newUser = new User
         {
-            PhoneNumber = request.PhoneNumber,
             UserName = request.UserName,
+            Name = request.Name,
             CreatedAt = DateTime.Now,
             PasswordHash = request.PasswordHash
         };
@@ -38,9 +38,9 @@ public class UsersController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.PasswordHash))
         {
-            return BadRequest("Введите телефон и пароль");
+            return BadRequest("Введите юзер и пароль");
         }
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == request.UserName);
         if (user == null)
         {
             return NotFound("Пользователь с таким номером не найден");

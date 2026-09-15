@@ -20,7 +20,7 @@ public class AuthStorageService
 
     public string? GetUserName()
     {
-        return Preferences.Default.Get(UserNameKey, null);
+        return Preferences.Default.Get<string?>(UserNameKey, null);
     }
 
     // Выход из аккаунта

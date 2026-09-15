@@ -1,5 +1,4 @@
-﻿namespace Messanger.Shared.Module
-{
+﻿namespace Messanger.Shared.Module;
     public class Chat
     {
         public int Id {  get; set; }
@@ -9,4 +8,3 @@
         public List<Message> Messages { get; set; } = new();
         public DateTime CreatedAt {  get; set; } = DateTime.Now;
     }
-}

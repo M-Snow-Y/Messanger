@@ -1,8 +1,11 @@
 ﻿@page "/Reg"
 @page "/"
 @using Messanger.Shared.Module
-@inject HttpClient Http
+@using Client.Services
+@inject AuthStorageService AuthStorage
 @inject NavigationManager Nav
+@inject HttpClient Http
+
 
 <div class="auth-container">
     <div class="auth-card">
@@ -22,19 +25,32 @@
             <input type="tel" 
                    @bind="phone" 
                    @bind:event="oninput" 
-                   placeholder="+7 (999) 000-00-00" 
+                   placeholder="+7 (999) 000-00-00"
+                   minlength="5"
+                   maxlength="15" 
                    @onkeyup="HandleKeyUp" />
         </div>
 
-        <!-- Поле: Никнейм (только при регистрации) -->
+        <!-- Поле: Никнейм и юзера (только при регистрации) -->
         @if (!isLoginMode)
         {
             <div class="input-group">
-                <label>Имя пользователя (Никнейм)</label>
+                <label>Юзер</label>
                 <input type="text" 
                        @bind="username" 
                        @bind:event="oninput" 
                        placeholder="ivan_ivanov" 
+                       maxlength="20"
+                       minlength="4"
+                       @onkeyup="HandleKeyUp" />
+            </div>
+
+            <div class="input-group">
+                <label>Никнейм</label>
+                <input type="text" 
+                       @bind="name" 
+                       @bind:event="oninput" 
+                       placeholder="Вася Пупкин" 
                        maxlength="20"
                        @onkeyup="HandleKeyUp" />
             </div>
@@ -48,7 +64,9 @@
                        @bind="password" 
                        @bind:event="oninput" 
                        placeholder="••••••••" 
-                       @onkeyup="HandleKeyUp" />
+                       @onkeyup="HandleKeyUp" 
+                       minlength="8"
+                       maxlength="20"/>
                 <button type="button" class="btn-toggle-pwd" @onclick="() => showPassword = !showPassword">
                     @(showPassword ? "👁️" : "🔒")
                 </button>
@@ -77,12 +95,13 @@
 
     private string phone = "";
     private string username = "";
+    private string name = "";
     private string password = "";
     private string errorMessage = "";
     private bool isSubmitting = false;
     private bool isLoginMode = true;
     private bool showPassword = false;
-
+    
 
     private void SetMode(bool login)
     {
@@ -93,7 +112,7 @@
     private async Task HandleSubmit()
     {
         errorMessage = "";
-
+        
         var cleanPhone = phone.Trim();
         var cleanPass = password.Trim();
 
@@ -111,10 +130,14 @@
 
         if (!isLoginMode && string.IsNullOrWhiteSpace(username))
         {
-            errorMessage = "Укажите имя пользователя (никнейм)";
+            errorMessage = "Укажите юзер";
             return;
         }
 
+        if (string.IsNullOrWhiteSpace( name ))
+        {
+            name = "username"+string.Trim(100);
+        }
         isSubmitting = true;
 
         try
@@ -124,6 +147,7 @@
             var payload = new User
             {
                 PhoneNumber = cleanPhone,
+                name = name,
                 UserName = isLoginMode ? "" : username.Trim(),
                 PasswordHash = passHash
             };
@@ -139,6 +163,7 @@
                 if (user != null && user.Id > 0)
                 {
                     // Сохраняем ID и имя в сессию приложения
+                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedName", user.Name);
                     Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserId", user.Id);
                     Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserName", user.UserName);
                     Microsoft.Maui.Storage.Preferences.Default.Set("SavedPhone", user.PhoneNumber);
@@ -190,5 +215,21 @@
         {
             await HandleSubmit();
         }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        // Если пользователь уже входил ранее — сразу открываем чат!
+        if (await AuthStorage.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/chat");
+            return;
+        }
+    }
+
+    private async Task HandleLoginSuccess(string token, string username)
+    {
+        // При успешном логине сохраняем:
+        await AuthStorage.SaveLoginAsync(token, username);
+        Nav.NavigateTo("/chat");
     }
 }

@@ -1,13 +1,180 @@
-@page "/SettingStyle"
+@page "/styles"
+@using Client.Models
+@using Client.Services
+@inject ThemeService ThemeService
 @inject NavigationManager Nav
+@implements IDisposable
 
-<div>
-    <span>Тут будет настройка, скоро.......</span>
-    <button @onclick = "GoToChat">Тык сюда для назад</button>
+<div class="styles-page" style="padding: 20px; max-width: 600px; margin: 0 auto; color: var(--tg-text-primary);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <button style="background: none; border: 1px solid var(--tg-border); color: var(--tg-text-primary); padding: 8px 14px; border-radius: 8px; cursor: pointer;" 
+                @onclick='() => Nav.NavigateTo("/chat")'>← Назад в чат</button>
+        <h2 style="margin: 0; font-size: 20px;">🎨 Оформление и темы</h2>
+    </div>
+
+    <!-- 1. Список тем -->
+    <div style="background: var(--tg-bg-secondary); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--tg-border);">
+        <h3 style="margin-top: 0; font-size: 16px;">Доступные темы</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
+            @foreach (var t in ThemeService.Themes)
+            {
+                <div style="border: 2px solid @(ThemeService.ActiveTheme?.Id == t.Id ? "var(--tg-accent)" : "var(--tg-border)"); border-radius: 10px; padding: 8px; cursor: pointer; text-align: center; background: var(--tg-bg-primary);"
+                     @onclick="() => SelectTheme(t)">
+                    <div style="height: 40px; border-radius: 6px; background: @t.BgPrimary; display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 6px;">
+                        <span style="width: 14px; height: 14px; border-radius: 50%; background: @t.BubbleMy;"></span>
+                        <span style="width: 14px; height: 14px; border-radius: 50%; background: @t.BubbleOther;"></span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@t.Name</div>
+                </div>
+            }
+        </div>
+
+        <label style="display: block; text-align: center; background: rgba(125,125,125,0.15); padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            📥 Загрузить тему из файла (.json)
+            <InputFile OnChange="HandleFileUpload" accept=".json" style="display:none;" />
+        </label>
+    </div>
+
+    <!-- 2. Редактирование выбранной темы -->
+    @if (editingTheme != null)
+    {
+        <div style="background: var(--tg-bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--tg-border);">
+            <h3 style="margin-top: 0; font-size: 16px;">Редактирование: @editingTheme.Name</h3>
+
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; margin-bottom: 4px;">Название темы:</label>
+                <input style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--tg-border); background: var(--tg-bg-primary); color: var(--tg-text-primary);" 
+                       @bind="editingTheme.Name" />
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>Фон чата:</span>
+                    <input type="color" @bind="editingTheme.BgPrimary" @bind:event="oninput" @bind:after="PreviewChange" />
+                </label>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>Фон сайдбара / меню:</span>
+                    <input type="color" @bind="editingTheme.BgSecondary" @bind:event="oninput" @bind:after="PreviewChange" />
+                </label>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>Мои сообщения:</span>
+                    <input type="color" @bind="editingTheme.BubbleMy" @bind:event="oninput" @bind:after="PreviewChange" />
+                </label>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>Чужие сообщения:</span>
+                    <input type="color" @bind="editingTheme.BubbleOther" @bind:event="oninput" @bind:after="PreviewChange" />
+                </label>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>Цвет текста:</span>
+                    <input type="color" @bind="editingTheme.TextPrimary" @bind:event="oninput" @bind:after="PreviewChange" />
+                </label>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>Кнопки / Акценты:</span>
+                    <input type="color" @bind="editingTheme.Accent" @bind:event="oninput" @bind:after="PreviewChange" />
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button style="flex: 1; background: var(--tg-accent); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;" 
+                        @onclick="SaveCurrentTheme">💾 Сохранить</button>
+                <button style="flex: 1; background: rgba(125,125,125,0.2); color: var(--tg-text-primary); border: none; padding: 10px; border-radius: 8px; cursor: pointer;" 
+                        @onclick="SaveAsNewCopy">📋 Копия</button>
+                @if (!editingTheme.IsBuiltIn)
+                {
+                    <button style="background: #ef4444; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer;" 
+                            @onclick="DeleteCurrentTheme">🗑️</button>
+                }
+            </div>
+        </div>
+    }
 </div>
 
-@code{
-    private void GoToChat(){
-        Nav.NavigateTo("/chat");
+@code {
+    private CustomThemeItem? editingTheme;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnChange += StateHasChanged;
+        if (ThemeService.ActiveTheme == null || ThemeService.Themes.Count == 0)
+        {
+            await ThemeService.InitializeAsync();
+        }
+        SelectTheme(ThemeService.ActiveTheme!);
+    }
+
+    private void SelectTheme(CustomThemeItem theme)
+    {
+        ThemeService.SetActiveTheme(theme.Id);
+        editingTheme = new CustomThemeItem
+        {
+            Id = theme.Id,
+            Name = theme.Name,
+            IsBuiltIn = theme.IsBuiltIn,
+            BgPrimary = theme.BgPrimary,
+            BgSecondary = theme.BgSecondary,
+            TextPrimary = theme.TextPrimary,
+            TextSecondary = theme.TextSecondary,
+            BubbleMy = theme.BubbleMy,
+            BubbleOther = theme.BubbleOther,
+            Accent = theme.Accent,
+            Border = theme.Border
+        };
+    }
+
+    private void PreviewChange()
+    {
+        if (editingTheme != null)
+        {
+            ThemeService.SetActiveTheme(editingTheme.Id);
+        }
+    }
+
+    private async Task SaveCurrentTheme()
+    {
+        if (editingTheme == null) return;
+        await ThemeService.SaveThemeAsync(editingTheme);
+    }
+
+    private async Task SaveAsNewCopy()
+    {
+        if (editingTheme == null) return;
+        editingTheme.Id = Guid.NewGuid().ToString();
+        editingTheme.Name += " (Копия)";
+        editingTheme.IsBuiltIn = false;
+        await ThemeService.SaveThemeAsync(editingTheme);
+    }
+
+    private void DeleteCurrentTheme()
+    {
+        if (editingTheme != null)
+        {
+            ThemeService.DeleteTheme(editingTheme);
+            SelectTheme(ThemeService.ActiveTheme);
+        }
+    }
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024);
+            var success = await ThemeService.ImportThemeAsync(stream, file.Name);
+            if (success)
+            {
+                SelectTheme(ThemeService.ActiveTheme);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= StateHasChanged;
     }
 }

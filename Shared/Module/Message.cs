@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-namespace Messanger.Shared.Module
-{
+namespace Messanger.Shared.Module;
     public class Message
     {
         public int Id {  get; set; }
@@ -18,4 +17,4 @@ namespace Messanger.Shared.Module
         [NotMapped]
         public string? SenderName { get; set; }
     }
-}
+;

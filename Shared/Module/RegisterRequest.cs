@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Messanger.Shared.Module
-{
+namespace Messanger.Shared.Module;
     public class RegisterRequest
     {
         [Required]
@@ -11,4 +10,4 @@ namespace Messanger.Shared.Module
         [MaxLength(20)]
         public string UserName {  get; set; } = string.Empty;
     }
-}
+

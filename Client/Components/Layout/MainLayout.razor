@@ -1,63 +1,16 @@
-﻿@using Client.Services
+﻿@inherits LayoutComponentBase
+@using Client.Services
 @inject ThemeService ThemeService
-@inject HttpClient Http
-@inherits LayoutComponentBase
 @implements IDisposable
-<!-- Отладочная плашка вверху страницы -->
-<!--<div style="background: rgba(0,0,0,0.85); color: #00ffcc; padding: 10px; font-family: monospace; font-size: 12px; border-bottom: 2px solid #00ffcc; z-index: 9999;">
-    <div><strong>🔗 URL сервера:</strong> @serverUrlDebug</div>
-    <div><strong>📡 Статус:</strong> @connectionStatusDebug</div>
-    @if (!string.IsNullOrEmpty(lastErrorDebug))
-    {
-        <div style="color: #ff6b6b; margin-top: 4px;"><strong>❌ Ошибка:</strong> @lastErrorDebug</div>
-    }
-</div>-->
-<div class="app-container @(ThemeService.IsDarkTheme ? "theme-dark" : "theme-light")">
+
+<div class="app-root" style="@(ThemeService.ActiveTheme?.ToCssString())">
     @Body
 </div>
 
-
-
 @code {
-    private string serverUrlDebug = "";
-    private string connectionStatusDebug = "Проверка...";
-    private string lastErrorDebug = "";
-
     protected override async Task OnInitializedAsync()
     {
-        // 1. Показываем текущий BaseAddress
-        serverUrlDebug = Http.BaseAddress?.ToString() ?? "URL НЕ ЗАДАН!";
-
-        // 2. Делаем тестовый пинг сервера
-        try
-        {
-            connectionStatusDebug = "Отправка тестового запроса...";
-            var response = await Http.GetAsync("api/Chat");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                connectionStatusDebug = $"✅ Успех! Код: {response.StatusCode}";
-            }
-            else
-            {
-                connectionStatusDebug = $"⚠️ Сервер ответил ошибкой: {response.StatusCode}";
-            }
-        }
-        catch (Exception ex)
-        {
-            connectionStatusDebug = "❌ Ошибка соединения!";
-            lastErrorDebug = $"{ex.GetType().Name}: {ex.Message}";
-            if (ex.InnerException != null)
-            {
-                lastErrorDebug += $" --> {ex.InnerException.Message}";
-            }
-        }
-    }
-
-
-    protected override void OnInitialized()
-    {
-        ThemeService.Initialize();
+        await ThemeService.InitializeAsync();
         ThemeService.OnChange += StateHasChanged;
     }
 

@@ -1,0 +1,19 @@
+@page "/profile"
+@inject NavigationManager Nav
+
+<div class="styles-page" style="padding: 20px; max-width: 600px; margin: 0 auto; color: var(--tg-text-primary);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <button style="background: none; border: 1px solid var(--tg-border); color: var(--tg-text-primary); padding: 8px 14px; border-radius: 8px; cursor: pointer;" 
+                @onclick='() => Nav.NavigateTo("/chat")'>← Назад в чат</button>
+        <h2 style="margin: 0; font-size: 20px;">👤Мой профиль</h2>
+    </div>
+
+    <div style="background: var(--tg-bg-secondary); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--tg-border);">
+        <h3 style="margin-top: 0; font-size: 16px;">Твои данные</h3>
+        
+    </div>
+</div>
+
+@code{
+
+}

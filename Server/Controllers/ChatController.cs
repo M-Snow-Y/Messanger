@@ -89,5 +89,10 @@ public class ChatController : ControllerBase
 
         await _context.SaveChangesAsync();
         return Ok(newChat);
+    }
+    [HttpGet("search")]
+    public async Task<ActionResult<Chat>> GetSearchChatWithText()
+    {
+        
     } 
 }

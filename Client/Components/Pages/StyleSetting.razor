@@ -1,0 +1,13 @@
+@page "/SettingStyle"
+@inject NavigationManager Nav
+
+<div>
+    <span>Тут будет настройка, скоро.......</span>
+    <button @onclick = "GoToChat">Тык сюда для назад</button>
+</div>
+
+@code{
+    private void GoToChat(){
+        Nav.NavigateTo("/chat");
+    }
+}

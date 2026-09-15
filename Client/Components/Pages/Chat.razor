@@ -14,7 +14,50 @@
 <div class="app-layout">
     <!-- Боковая панель: список чатов -->
     <div class="sidebar @(isMobileChatActive ? "hidden-on-mobile" : "")">
-        <div class="sidebar-header">
+        <div class="sidebar-header"><!-- 1. Кнопка открытия панели (три полоски - гамбургер) -->
+<button class="btn-drawer-toggle" @onclick="ToggleDrawer" title="Меню">
+    ☰
+</button>
+
+<!-- 2. Затемняющий оверлей (при клике на любое место закрывает панель) -->
+@if (isDrawerOpen)
+{
+    <div class="drawer-backdrop" @onclick="CloseDrawer"></div>
+}
+
+<!-- 3. Сама выезжающая боковая панель -->
+<aside class="drawer-panel @(isDrawerOpen ? "open" : "")">
+    <div class="drawer-header">
+        <div class="drawer-title">Настройки и профиль</div>
+        <button class="btn-drawer-close" @onclick="CloseDrawer">✕</button>
+    </div>
+
+    <div class="drawer-body">
+        <!-- Смена темы -->
+        <div class="drawer-item" @onclick="ToggleAppTheme">
+            <span class="drawer-item-icon">@(ThemeService.IsDarkTheme ? "☀️" : "🌙")</span>
+            <span>@(ThemeService.IsDarkTheme ? "Светлая тема" : "Тёмная тема")</span>
+        </div>
+
+        <!-- Дополнительные пункты меню -->
+        <div class="drawer-item" @onclick="OpenProfile">
+            <span class="drawer-item-icon">👤</span>
+            <span>Мой профиль</span>
+        </div>
+
+        <div class= "drawer-item" @onclick="StyleSetting">
+            <span class = "drawer-item-icon">🤍</span>
+            <span class = "">Настройка своего стиля</span>
+        </div>
+
+        <div class="drawer-item text-danger" @onclick="Logout">
+            <span class="drawer-item-icon">🚪</span>
+            <span>Выйти из аккаунта</span>
+        </div>
+
+
+    </div>
+</aside>
             <div class="create-chat-form">
                 <input class="create-chat-input" 
                        placeholder="Название нового чата..." 
@@ -23,8 +66,6 @@
                        @onkeyup="HandleCreateChatKey" />
                        <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:20px;" @onclick="CreateChat">+</button>
             </div>
-            <button class="bth-changecolor" style="border-radius:8px; width:auto; padding:0 12px; font-size:12px;"
-            @onclick="ToggleAppTheme">@(ThemeService.IsDarkTheme ? "☀️" : "🌙")</button>
         </div>
 
         <ul class="chats-list">
@@ -120,6 +161,28 @@
 }
 
 @code {
+
+// Состояние выезжающей панели
+    private bool isDrawerOpen = false;
+
+    private void CloseDrawer()
+    {
+        isDrawerOpen = false;
+    }
+
+    private void OpenProfile()
+    {
+        CloseDrawer();
+        // Твоя логика профиля
+    }
+
+    private void Logout()
+    {
+        CloseDrawer();
+        // Твоя логика выхода
+    }
+
+
     private int currentUserId;
     private string newChatName = "";
     private string messageText = "";
@@ -274,9 +337,16 @@ private string GetFullImageUrl(string? url)
     return $"{baseAddress}{url.TrimStart('/')}";
 }
 
-private void ToggleAppTheme()
-{
-    ThemeService.ToggleTheme();
-    StateHasChanged();
-}
+    private void ToggleAppTheme()
+    {
+        ThemeService.ToggleTheme();
+        StateHasChanged();
+    }
+    private void ToggleDrawer()
+    {
+        isDrawerOpen = !isDrawerOpen;
+    }
+    private void StyleSetting(){
+        Nav.NavigateTo("/SettingStyle");
+    }
 }

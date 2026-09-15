@@ -650,3 +650,138 @@ html, body {
     margin-right: 12px;
   }
 }
+
+/* ==========================================================================
+   ВЫЕЗЖАЮЩАЯ БОКОВАЯ ПАНЕЛЬ (DRAWER / MENU)
+   ========================================================================== */
+
+/* Кнопка "Гамбургер" ☰ */
+.btn-drawer-toggle {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: var(--tg-text-primary);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.btn-drawer-toggle:hover {
+  background-color: rgba(125, 125, 125, 0.15);
+}
+
+/* Полупрозрачная подложка на весь экран */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  animation: fadeIn 0.25s ease forwards;
+}
+
+/* Сама выезжающая шторка слева */
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: var(--tg-bg-secondary);
+  border-right: 1px solid var(--tg-border);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%); /* По умолчанию спрятана за левым краем */
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Когда активна — плавно выезжает */
+.drawer-panel.open {
+  transform: translateX(0);
+}
+
+/* Шапка меню */
+.drawer-header {
+  height: 56px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--tg-border);
+}
+
+.drawer-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--tg-text-primary);
+}
+
+.btn-drawer-close {
+  background: none;
+  border: none;
+  color: var(--tg-text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.btn-drawer-close:hover {
+  background-color: rgba(125, 125, 125, 0.15);
+  color: var(--tg-text-primary);
+}
+
+/* Список пунктов в меню */
+.drawer-body {
+  flex: 1;
+  padding: 12px 8px;
+  overflow-y: auto;
+}
+
+.drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  margin: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14.5px;
+  color: var(--tg-text-primary);
+  transition: background-color 0.15s;
+  background-color: var(--tg--bg--color);
+}
+
+.drawer-item:hover {
+  background-color: rgba(125, 125, 125, 0.12);
+}
+
+.drawer-item-icon {
+  font-size: 18px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-item.text-danger {
+  color: #ef4444;
+}
+
+.drawer-item.text-danger:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

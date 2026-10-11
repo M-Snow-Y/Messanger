@@ -55,20 +55,10 @@ public class ChatController : ControllerBase
 
     public async Task<ActionResult<Chat>> GetOrCreatePrivateChat( [FromBody] PrivateChatRequest request )
     {
-        if(request.CurrentUserId == request.TargetUserId) return BadRequest("Ты не можешь сам себе отправить это");
-        
-        var currentUser = await _context.Users.FindAsync(request.CurrentUserId);
-        var targetUser = await _context.Users.FindAsync(request.TargetUserId);
-        
-        if (currentUser == null || targetUser == null)
-        {
-            return NotFound("Один из пользователей не найден в базе");
-        }
-        
-        var existingChat  = await _context.Chats.Include(
-            c => c.Users
-            ).FirstOrDefaultAsync
-            (c => !c.IsGroup &&
+        if(request.CurrentUserId == request.TargetUserId) return BadRequest("Ты не можешь сам себе отправить это");        
+        var existingChat  = await _context.Chats.Include(c => c.Users)
+        .FirstOrDefaultAsync(
+            c => !c.IsGroup &&
                 c.Users.Any(
                     u => u.Id == request.CurrentUserId
                 ) && 
@@ -77,22 +67,25 @@ public class ChatController : ControllerBase
                 )
             );
         if(existingChat  != null) return Ok(existingChat );
+        
+        var currentUser = await _context.Users.FindAsync(request.CurrentUserId);
+        var targetUser = await _context.Users.FindAsync(request.TargetUserId);
+        
+        if (currentUser == null || targetUser == null)
+        {
+            return NotFound("Один из пользователей не найден в базе");
+        }
 
         var newChat = new Chat
         {
           Name = "Диалог",
           IsGroup = false,
           Users = new List<User>{currentUser, targetUser},
-          CreatedAt = DateTime.Now  
+          CreatedAt = DateTime.UtcNow  
         };
         _context.Chats.Add(newChat);
 
         await _context.SaveChangesAsync();
         return Ok(newChat);
     }
-    [HttpGet("search")]
-    public async Task<ActionResult<Chat>> GetSearchChatWithText()
-    {
-        
-    } 
 }

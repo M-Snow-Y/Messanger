@@ -1,4 +1,4 @@
-namespace Messanger.Shared.Module;
+namespace Client.Models;
 public class CustomThemeItem
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();

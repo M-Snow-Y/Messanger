@@ -553,6 +553,68 @@ html, body {
   transform: scale(1.05);
 }
 
+/* Контейнер в правом нижнем углу боковой панели */
+.fab-Wrapper {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    z-index: 50;
+}
+
+/* Круглая кнопка + */
+.fab-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--tg-accent);
+    color: white;
+    font-size: 28px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+/* Когда меню открыто — плюсик поворачивается и становится крестиком */
+.fab-btn.active {
+    transform: rotate(45deg);
+    background: #334155;
+}
+
+/* Всплывающее меню над кнопкой */
+.fab-menu {
+    margin-bottom: 10px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 170px;
+}
+
+.fab-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    color: #f8fafc;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+}
+
+.fab-menu-item:hover {
+    background: #334155;
+}
 
 /* ==========================================================================
    4. МОДАЛЬНОЕ ОКНО ПРОСМОТРА ФОТО (LIGHTBOX)

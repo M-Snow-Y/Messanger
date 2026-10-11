@@ -1,8 +1,9 @@
 ﻿@page "/chat"
 @using Client.Services
 @using Messanger.Shared.Module
+@using ChatModel = Messanger.Shared.Module.Chat
 @using Microsoft.AspNetCore.Components.Forms
-@inject ThemeService ThemeService   
+@inject ThemeService ThemeService
 @inject IChatService ChatService
 @inject AuthStorageService AuthStorage
 @inject NavigationManager Nav
@@ -11,7 +12,22 @@
 
 @implements IDisposable
 
-<div class="app-layout">
+<!-- Подключаем цвета активной темы -->
+<style>
+    :root {
+        --bg-primary: @ThemeService.ActiveTheme.BgPrimary;
+        --bg-secondary: @ThemeService.ActiveTheme.BgSecondary;
+        --text-primary: @ThemeService.ActiveTheme.TextPrimary;
+        --text-secondary: @ThemeService.ActiveTheme.TextSecondary;
+        --tg-text-secondary: @ThemeService.ActiveTheme.TextSecondary;
+        --bubble-my: @ThemeService.ActiveTheme.BubbleMy;
+        --bubble-other: @ThemeService.ActiveTheme.BubbleOther;
+        --accent: @ThemeService.ActiveTheme.Accent;
+        --border: @ThemeService.ActiveTheme.Border;
+    }
+</style>
+
+<div class="app-layout" style="background-color: var(--bg-primary); color: var(--text-primary);">
     <!-- Затемняющий оверлей шторки -->
     @if (isDrawerOpen)
     {
@@ -52,19 +68,33 @@
     </aside>
 
     <!-- Левая колонка: список чатов -->
-    <div class="sidebar @(isMobileChatActive ? "hidden-on-mobile" : "")">
+    <div class="sidebar @(isMobileChatActive ? "hidden-on-mobile" : "")"
+         style="position: relative; background-color: var(--bg-secondary); color: var(--text-primary);">
         <div class="sidebar-header">
             <button class="btn-drawer-toggle" @onclick="ToggleDrawer" title="Меню">
                 ☰
             </button>
 
-            <div class="create-chat-form">
-                <input class="create-chat-input" 
-                       placeholder="Название нового чата..." 
-                       @bind="newChatName" 
-                       @bind:event="oninput" 
-                       @onkeyup="HandleCreateChatKey" />
-                <button class="btn-send" style="border-radius:8px; width:auto; padding:0 12px; font-size:20px;" @onclick="CreateChat">+</button>
+            <div class="find-chatNew-form" style="position: relative; flex: 1;">
+                <input @ref="searchInput"
+                       class="find-createNew-chat"
+                       placeholder="Поиск...."
+                       value="@searchQuery"
+                       @oninput="OnSearchInput" />
+
+                @if (foundUsers.Any())
+                {
+                    <ul class="search-dropdown" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 100; background: var(--bg-secondary); list-style: none; margin: 4px 0 0 0; padding: 0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-height: 250px; overflow-y: auto;">
+                        @foreach (var user in foundUsers)
+                        {
+                            <li style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border);"
+                                @onclick="() => StartPrivateChat(user.Id)">
+                                <strong>@user.Name</strong>
+                                <span style="opacity: 0.7; font-size: 12px; margin-left: 6px;">@@@user.UserName</span>
+                            </li>
+                        }
+                    </ul>
+                }
             </div>
         </div>
 
@@ -77,15 +107,40 @@
                 </li>
             }
         </ul>
+
+        <!-- Подложка для закрытия меню при клике мимо -->
+        @if (isMenuOpen)
+        {
+            <div class="menu-backdrop" @onclick="() => isMenuOpen = false"></div>
+        }
+
+        <!-- Плавающая кнопка + и меню выбора -->
+        <div class="fab-Wrapper">
+            @if (isMenuOpen)
+            {
+                <div class="fab-menu">
+                    <button class="fab-menu-item" @onclick="FocusSearchForPrivateChat">
+                        <span>👤</span> Личный чат
+                    </button>
+                    <button class="fab-menu-item" @onclick="StartGroupChat">
+                        <span>👥</span> Создать группу
+                    </button>
+                </div>
+            }
+            <button class="fab-btn @(isMenuOpen ? "active" : "")"
+                    @onclick="() => isMenuOpen = !isMenuOpen">
+                +
+            </button>
+        </div>
     </div>
 
     <!-- Правая колонка: область активного чата -->
-    <div class="chat-area">
+    <div class="chat-area" style="background-color: var(--bg-primary); color: var(--text-primary);">
         @if (ChatService.ActiveChatId != null)
         {
             <div class="chat-header">
-                <button class="btn-icon btn-back-to-chats" 
-                        style="display:none;" 
+                <button class="btn-icon btn-back-to-chats"
+                        style="display:none;"
                         @onclick="BackToChatsList">
                     ←
                 </button>
@@ -93,7 +148,7 @@
             </div>
 
             <div class="messages-container" id="messagesContainer">
-                @foreach (var msg in ChatService.CurrentMessages)
+                @foreach (Message msg in ChatService.CurrentMessages)
                 {
                     bool isMy = msg.SenderId == currentUserId;
                     <div class="message-row @(isMy ? "my-message" : "other-message")">
@@ -105,7 +160,7 @@
 
                             @if (!string.IsNullOrEmpty(msg.ImageUrl))
                             {
-                                <img src="@GetFullImageUrl(msg.ImageUrl)" class="chat-image" alt="Изображение" 
+                                <img src="@GetFullImageUrl(msg.ImageUrl)" class="chat-image" alt="Изображение"
                                      @onclick="() => OpenImagePreview(msg.ImageUrl)" />
                             }
 
@@ -129,10 +184,10 @@
                     <InputFile OnChange="HandlePhotoSelected" style="display:none;" accept="image/*" />
                 </label>
 
-                <input class="chat-input" 
-                       placeholder="Напишите сообщение..." 
-                       @bind="messageText" 
-                       @bind:event="oninput" 
+                <input class="chat-input"
+                       placeholder="Напишите сообщение..."
+                       @bind="messageText"
+                       @bind:event="oninput"
                        @onkeyup="HandleMessageKeyPress" />
 
                 <button class="btn-send" @onclick="SendMessage" title="Отправить">
@@ -160,7 +215,9 @@
 }
 
 @code {
+    private ElementReference searchInput;
     private bool isDrawerOpen = false;
+    private bool isMenuOpen = false;
 
     private void ToggleDrawer()
     {
@@ -190,9 +247,94 @@
             return;
         }
 
+        ThemeService.OnChange += HandleStateChanged;
+        await ThemeService.InitializeAsync();
+
         ChatService.OnChange += HandleStateChanged;
         await ChatService.LoadChatsAsync(currentUserId);
         ChatService.StartPeriodicPolling(currentUserId, TimeSpan.FromSeconds(3));
+    }
+
+    private string searchQuery = "";
+    private List<User> foundUsers = new List<User>();
+    private CancellationTokenSource? _searchCts;
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
+
+        // Исправлено: если строка ПУСТАЯ, очищаем список и выходим
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            foundUsers.Clear();
+            return;
+        }
+
+        _searchCts = new CancellationTokenSource();
+        CancellationToken token = _searchCts.Token;
+
+        try
+        {
+            await Task.Delay(millisecondsDelay: 100, token);
+            string url = $"api/users/search?currentId={currentUserId}&query={Uri.EscapeDataString(searchQuery)}";
+            var result = await Http.GetFromJsonAsync<List<User>>(url, token);
+            foundUsers = result ?? new List<User>();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка поиска: {ex.Message}");
+            foundUsers.Clear();
+        }
+    }
+
+    // Вызывается из меню "+" -> "Личный чат"
+    private async Task FocusSearchForPrivateChat()
+    {
+        isMenuOpen = false;
+        await searchInput.FocusAsync();
+    }
+
+    // Вызывается при клике на найденного пользователя в списке
+    private async Task StartPrivateChat(int targetUserId)
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
+
+        searchQuery = string.Empty;
+        foundUsers.Clear();
+        isMenuOpen = false;
+        StateHasChanged();
+
+        HttpResponseMessage response = await Http.PostAsJsonAsync("api/chats/private", new
+        {
+            CurrentUserId = currentUserId,
+            TargetUserId = targetUserId
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Используем ChatModel (псевдоним для Messanger.Shared.Module.Chat),
+            // чтобы не путать с именем страницы Chat.razor
+            ChatModel? chat = await response.Content.ReadFromJsonAsync<ChatModel>();
+            if (chat != null)
+            {
+                await ChatService.LoadChatsAsync(currentUserId);
+                await SelectChat(chat.Id);
+            }
+        }
+    }
+
+    private void StartGroupChat()
+    {
+        isMenuOpen = false;
     }
 
     private void HandleStateChanged()
@@ -216,7 +358,7 @@
     private async Task SendMessage()
     {
         if (string.IsNullOrWhiteSpace(messageText) || ChatService.ActiveChatId == null) return;
-        var text = messageText;
+        string text = messageText;
         messageText = "";
 
         await ChatService.SendMessageAsync(ChatService.ActiveChatId.Value, currentUserId, text);
@@ -226,11 +368,11 @@
     private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
     {
         if (ChatService.ActiveChatId == null) return;
-        var file = e.File;
+        IBrowserFile? file = e.File;
         if (file == null) return;
 
-        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-        var relativeUrl = await ChatService.UploadPhotoAsync(stream, file.Name);
+        using Stream stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+        string? relativeUrl = await ChatService.UploadPhotoAsync(stream, file.Name);
 
         if (!string.IsNullOrEmpty(relativeUrl))
         {
@@ -254,21 +396,21 @@
     private string GetMediaUrl(string? relativeUrl)
     {
         if (string.IsNullOrEmpty(relativeUrl)) return "";
-        string baseAddr = DeviceInfo.Platform == DevicePlatform.Android 
-            ? "http://10.0.2.2:5050/" 
+        string baseAddr = DeviceInfo.Platform == DevicePlatform.Android
+            ? "http://10.0.2.2:5050/"
             : "http://localhost:5050/";
-        return $"{baseAddr}{relativeUrl.TrimStart('/')}";
+        return $"{baseAddr}{relativeUrl.TrimStart(trimChar: '/')}";
     }
 
     private async Task ScrollToBottom()
     {
-        await Task.Delay(50);
+        await Task.Delay(millisecondsDelay: 50);
         await JS.InvokeVoidAsync("eval", "const c = document.getElementById('messagesContainer'); if(c) c.scrollTop = c.scrollHeight;");
     }
 
     private async Task HandleCreateChatKey(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter") await CreateChat();
+        if (e.Key == "Enter") await CreatePrivateChat();
     }
 
     private async Task HandleMessageKeyPress(KeyboardEventArgs e)
@@ -276,20 +418,21 @@
         if (e.Key == "Enter") await SendMessage();
     }
 
-    private async Task CreateChat()
+    private async Task CreatePrivateChat()
     {
         if (string.IsNullOrWhiteSpace(newChatName)) return;
 
-        var chatToCreate = newChatName.Trim();
+        string chatToCreate = newChatName.Trim();
         newChatName = "";
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/Chat/create", new 
-            { 
-                Name = chatToCreate, 
-                IsGroup = true,
-                CreatedAt = DateTime.UtcNow 
+            HttpResponseMessage response = await Http.PostAsJsonAsync("api/Chat/private", new
+            {
+                Name = chatToCreate,
+                IsGroup = false,
+                CreatedAt = DateTime.UtcNow,
+                TypeChat = 1
             });
 
             if (response.IsSuccessStatusCode)
@@ -306,7 +449,11 @@
 
     public void Dispose()
     {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        ThemeService.OnChange -= HandleStateChanged;
         ChatService.OnChange -= HandleStateChanged;
+        ChatService.StopPeriodicPolling();
     }
 
     private string GetFullImageUrl(string? url)
@@ -315,7 +462,7 @@
 
         url = url.Replace("\\", "/");
 
-        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             return url;
@@ -328,6 +475,6 @@
     private void Logout()
     {
         AuthStorage.Logout();
-        Nav.NavigateTo("/");
+        Nav.NavigateTo("/Reg");
     }
 }

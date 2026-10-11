@@ -3,6 +3,7 @@
 @using Client.Services
 @inject ThemeService ThemeService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 @implements IDisposable
 
 <div class="styles-page" style="padding: 20px; max-width: 600px; margin: 0 auto; color: var(--tg-text-primary);">
@@ -17,7 +18,7 @@
         <h3 style="margin-top: 0; font-size: 16px;">Доступные темы</h3>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
-            @foreach (var t in ThemeService.Themes)
+            @foreach (CustomThemeItem t in ThemeService.Themes)
             {
                 <div style="border: 2px solid @(ThemeService.ActiveTheme?.Id == t.Id ? "var(--tg-accent)" : "var(--tg-border)"); border-radius: 10px; padding: 8px; cursor: pointer; text-align: center; background: var(--tg-bg-primary);"
                      @onclick="() => SelectTheme(t)">
@@ -107,7 +108,7 @@
         }
         SelectTheme(ThemeService.ActiveTheme!);
     }
-
+    
     private void SelectTheme(CustomThemeItem theme)
     {
         ThemeService.SetActiveTheme(theme.Id);
@@ -172,7 +173,7 @@
             }
         }
     }
-
+    
     public void Dispose()
     {
         ThemeService.OnChange -= StateHasChanged;

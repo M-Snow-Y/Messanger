@@ -6,7 +6,6 @@
 @inject NavigationManager Nav
 @inject HttpClient Http
 
-
 <div class="auth-container">
     <div class="auth-card">
         <div class="brand-logo">💬</div>
@@ -19,23 +18,23 @@
             <button class="auth-tab @(!isLoginMode ? "active" : "")" @onclick="() => SetMode(false)">Регистрация</button>
         </div>
 
-        <!-- Поле: Телефон -->
+        <!-- Поле: Email / Почта -->
         <div class="input-group">
-            <label>Номер телефона</label>
-            <input type="tel" 
-                   @bind="phone" 
+            <label>Электронная почта</label>
+            <input type="email" 
+                   @bind="email" 
                    @bind:event="oninput" 
-                   placeholder="+7 (999) 000-00-00"
+                   placeholder="user@example.com"
                    minlength="5"
-                   maxlength="15" 
+                   maxlength="255" 
                    @onkeyup="HandleKeyUp" />
         </div>
 
-        <!-- Поле: Никнейм и юзера (только при регистрации) -->
+        <!-- Поля: Юзер и Имя (только при регистрации) -->
         @if (!isLoginMode)
         {
             <div class="input-group">
-                <label>Юзер</label>
+                <label>Юзернейм (@username)</label>
                 <input type="text" 
                        @bind="username" 
                        @bind:event="oninput" 
@@ -46,7 +45,7 @@
             </div>
 
             <div class="input-group">
-                <label>Никнейм</label>
+                <label>Отображаемое имя</label>
                 <input type="text" 
                        @bind="name" 
                        @bind:event="oninput" 
@@ -65,7 +64,7 @@
                        @bind:event="oninput" 
                        placeholder="••••••••" 
                        @onkeyup="HandleKeyUp" 
-                       minlength="8"
+                       minlength="6"
                        maxlength="20"/>
                 <button type="button" class="btn-toggle-pwd" @onclick="() => showPassword = !showPassword">
                     @(showPassword ? "👁️" : "🔒")
@@ -92,8 +91,8 @@
 </div>
 
 @code {
-
-    private string phone = "";
+    private static readonly Random random = new Random();
+    private string email = "";
     private string username = "";
     private string name = "";
     private string password = "";
@@ -101,7 +100,21 @@
     private bool isSubmitting = false;
     private bool isLoginMode = true;
     private bool showPassword = false;
-    
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (await AuthStorage.IsAuthenticatedAsync())
+            {
+                Nav.NavigateTo("/chat");
+            }
+        }
+        catch
+        {
+
+        }
+    }
 
     private void SetMode(bool login)
     {
@@ -111,14 +124,15 @@
 
     private async Task HandleSubmit()
     {
+        
         errorMessage = "";
         
-        var cleanPhone = phone.Trim();
+        var cleanEmail = email.Trim();
         var cleanPass = password.Trim();
 
-        if (string.IsNullOrWhiteSpace(cleanPhone))
+        if (string.IsNullOrWhiteSpace(cleanEmail))
         {
-            errorMessage = "Введите номер телефона";
+            errorMessage = "Введите почту";
             return;
         }
 
@@ -130,14 +144,15 @@
 
         if (!isLoginMode && string.IsNullOrWhiteSpace(username))
         {
-            errorMessage = "Укажите юзер";
+            errorMessage = "Укажите юзернейм";
             return;
         }
 
-        if (string.IsNullOrWhiteSpace( name ))
+        if (string.IsNullOrWhiteSpace(name))
         {
-            name = "username"+string.Trim(100);
+            name = "User_" + random.Next(1000, 9999);
         }
+
         isSubmitting = true;
 
         try
@@ -145,10 +160,10 @@
             string passHash = ComputeSha256(cleanPass);
 
             var payload = new User
-            {
-                PhoneNumber = cleanPhone,
-                name = name,
-                UserName = isLoginMode ? "" : username.Trim(),
+            {   
+                Email = cleanEmail,
+                Name = name,
+                UserName = isLoginMode ? cleanEmail : username.Trim(),
                 PasswordHash = passHash
             };
 
@@ -162,35 +177,21 @@
 
                 if (user != null && user.Id > 0)
                 {
-                    // Сохраняем ID и имя в сессию приложения
-                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedName", user.Name);
-                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserId", user.Id);
-                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedUserName", user.UserName);
-                    Microsoft.Maui.Storage.Preferences.Default.Set("SavedPhone", user.PhoneNumber);
-
-                    // Успешно! Переходим в чат
+                    AuthStorage.SaveUserSession(user);
                     Nav.NavigateTo("/chat");
                 }
             }
             else
             {
-                // ПОЛУЧАЕМ ТОЧНЫЙ ТЕКСТ ОШИБКИ ОТ СЕРВЕРА
-                // (например, "Неверный пароль" или "Пользователь не найден")
                 var serverError = await response.Content.ReadAsStringAsync();
-
-                if (!string.IsNullOrWhiteSpace(serverError))
-                {
-                    errorMessage = serverError;
-                }
-                else
-                {
-                    errorMessage = isLoginMode ? "Ошибка входа" : "Ошибка регистрации";
-                }
+                errorMessage = !string.IsNullOrWhiteSpace(serverError) 
+                    ? serverError 
+                    : (isLoginMode ? "Неверный логин или пароль" : "Ошибка регистрации");
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Нет связи с сервером: {ex.Message}";
+            errorMessage = $"Нет связи с сервером (http://localhost:5050): {ex.Message}";
         }
         finally
         {
@@ -209,27 +210,12 @@
         }
         return sb.ToString();
     }
+
     private async Task HandleKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
             await HandleSubmit();
         }
-    }
-    protected override async Task OnInitializedAsync()
-    {
-        // Если пользователь уже входил ранее — сразу открываем чат!
-        if (await AuthStorage.IsAuthenticatedAsync())
-        {
-            Nav.NavigateTo("/chat");
-            return;
-        }
-    }
-
-    private async Task HandleLoginSuccess(string token, string username)
-    {
-        // При успешном логине сохраняем:
-        await AuthStorage.SaveLoginAsync(token, username);
-        Nav.NavigateTo("/chat");
     }
 }

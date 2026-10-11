@@ -1,70 +1,67 @@
-﻿using Messanger.Server.Data;
-using Messanger.Shared.Module;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Messanger.Server.Data;
+using Messanger.Shared.Module;
 
-[Route("api/[controller]")]
+namespace Messanger.Server.Controllers;
+
 [ApiController]
+[Route("api/[controller]")]
 public class MessagesController : ControllerBase
 {
-    private readonly AppDbContext _context;
-    private readonly IWebHostEnvironment _env;
+    private readonly AppDbContext _db;
 
-    public MessagesController(AppDbContext context, IWebHostEnvironment env)
+    public MessagesController(AppDbContext db)
     {
-        _context = context;
-        _env = env;
+        _db = db;
     }
 
+    // 1. Получить сообщения для конкретного чата
     [HttpGet("chat/{chatId}")]
-public async Task<ActionResult<List<Message>>> GetChatMessages(int chatId)
-{
-    var messages = await (from m in _context.Messages.AsNoTracking()
-                          where m.ChatId == chatId
-                          join u in _context.Users.AsNoTracking() on m.SenderId equals u.Id into userGroup
-                          from u in userGroup.DefaultIfEmpty()
-                          orderby m.CreatedAt ascending
-                          select new Message
-                          {
-                              Id = m.Id,
-                              ChatId = m.ChatId,
-                              SenderId = m.SenderId,
-                              Text = m.Text,
-                              ImageUrl = m.ImageUrl,
-                              CreatedAt = m.CreatedAt,
-                              SenderName = u != null ? u.UserName : "Неизвестный"
-                          }).ToListAsync();
+    public async Task<IActionResult> GetMessagesByChat(int chatId)
+    {
+        var messages = await _db.Messages
+            .Where(m => m.ChatId == chatId)
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => new Message
+            {
+                Id = m.Id,
+                ChatId = m.ChatId,
+                SenderId = m.SenderId,
+                // Автоматически подтягиваем имя отправителя из таблицы Users!
+                SenderName = m.SenderName != null ? m.Sender.Name : "Неизвестный",
+                Text = m.Text,
+                Content = m.Content, 
+                TypeMessage = m.TypeMessage, 
+                CreatedAt = m.CreatedAt
+            })
+            .ToListAsync();
 
-    return Ok(messages);
-}
+        return Ok(messages);
+    }
 
-    [HttpPost("send")]
+    [HttpPost]
     public async Task<IActionResult> SendMessage([FromBody] Message request)
     {
-        request.CreatedAt = DateTime.Now;
-        _context.Messages.Add(request);
-        await _context.SaveChangesAsync();
-        return Ok(request);
+        if (request.ChatId <= 0 || request.SenderId <= 0)
+            return BadRequest("Неверный ChatId или SenderId.");
+
+        var message = new Message
+        {
+            ChatId = request.ChatId,
+            SenderId = request.SenderId,
+            Text = request.Text,
+            Content = request.Content,
+            TypeMessage = request.TypeMessage,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Messages.Add(message);
+        await _db.SaveChangesAsync();
+
+        var sender = await _db.Users.FindAsync(message.SenderId);
+        message.SenderName = sender?.Name ?? "Пользователь";
+
+        return Ok(message);
     }
-
-[HttpPost("upload-photo")]
-public async Task<IActionResult> UploadPhoto(IFormFile file)
-{
-    if (file == null || file.Length == 0)
-        return BadRequest("Файл не выбран");
-    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-    if (!Directory.Exists(uploadsFolder))
-        Directory.CreateDirectory(uploadsFolder);
-
-    var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await file.CopyToAsync(stream);
-    }
-
-    var fileUrl = $"/uploads/{uniqueFileName}";
-    return Ok(new { url = fileUrl });
-}
 }

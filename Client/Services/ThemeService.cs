@@ -58,7 +58,6 @@ public class ThemeService
         }
     }
 
-    // Циклическое переключение тем одной кнопкой
     public void CycleTheme()
     {
         if (Themes.Count == 0) return;
@@ -88,7 +87,7 @@ public class ThemeService
             Themes.Add(theme);
         }
 
-        if (ActiveTheme?.Id == theme.Id) ActiveTheme = theme;
+        if (ActiveTheme?.Id == theme.Id) ActiveTheme = theme; 
         OnChange?.Invoke();
     }
 
@@ -149,8 +148,8 @@ public static class CustomThemeFactory
         Name = "Классическая тёмная",
         IsDark = true,
         IsBuiltIn = true,
-        BgPrimary = "#0e1621",
-        BgSecondary = "#17212b",
+        BgPrimary = "rgb(14, 22, 33)",
+        BgSecondary = "rgb(23, 33, 43)",
         TextPrimary = "#f5f5f5",
         TextSecondary = "#708499",
         BubbleMy = "#2b5278",

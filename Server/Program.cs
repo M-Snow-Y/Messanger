@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Messanger.Server.Data;
 
+// Включаем совместимость дат для PostgreSQL
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=messanger.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -33,13 +36,13 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-
 app.MapControllers();
-// АВТОМАТИЧЕСКОЕ СОЗДАНИЕ ТАБЛИЦ В БАЗЕ ДАННЫХ
+
+// АВТОМАТИЧЕСКОЕ СОЗДАНИЕ ТАБЛИЦ В POSTGRESQL
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    //db.Database.EnsureDeleted(); // 1. Удаляем пустой битый файл базы
-    db.Database.EnsureCreated(); // 2. Создаём заново со всеми таблицами Users, Chats, Messages!
+    db.Database.EnsureCreated(); // Создаст все таблицы в схеме public!
 }
+
 app.Run("http://0.0.0.0:5050");

@@ -1,39 +1,49 @@
+using Messanger.Shared.Module;
+using Microsoft.Maui.Storage;
+
 namespace Client.Services;
 
 public class AuthStorageService
 {
-    private const string TokenKey = "auth_user_token";
-    private const string UserNameKey = "auth_user_name";
+    private const string UserIdKey = "SavedUserId";
+    private const string NameKey = "SavedName";
+    private const string UserNameKey = "SavedUserName";
+    private const string EmailKey = "SavedEmail";
 
-    // Сохраняем после успешного входа
-    public async Task SaveLoginAsync(string token, string userName)
+    public void SaveUserSession(User user)
     {
-        await SecureStorage.Default.SetAsync(TokenKey, token);
-        Preferences.Default.Set(UserNameKey, userName);
+        Preferences.Default.Set(UserIdKey, user.Id);
+        Preferences.Default.Set(NameKey, user.Name ?? "");
+        Preferences.Default.Set(UserNameKey, user.UserName ?? "");
+        Preferences.Default.Set(EmailKey, user.Email ?? "");
     }
 
-    // Получаем сохраненный токен при запуске
-    public async Task<string?> GetTokenAsync()
+    public int GetUserId() => Preferences.Default.Get(UserIdKey, 0);
+
+    public string GetName() => Preferences.Default.Get(NameKey, "Гость");
+
+    public string GetUserName() => Preferences.Default.Get(UserNameKey, "");
+
+    public string GetEmail() => Preferences.Default.Get(EmailKey, "");
+
+    public Task<bool> IsAuthenticatedAsync()
     {
-        return await SecureStorage.Default.GetAsync(TokenKey);
+        try
+        {
+            int userId = GetUserId();
+            return Task.FromResult(userId > 0);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
     }
 
-    public string? GetUserName()
-    {
-        return Preferences.Default.Get<string?>(UserNameKey, null);
-    }
-
-    // Выход из аккаунта
     public void Logout()
     {
-        SecureStorage.Default.Remove(TokenKey);
+        Preferences.Default.Remove(UserIdKey);
+        Preferences.Default.Remove(NameKey);
         Preferences.Default.Remove(UserNameKey);
-    }
-
-    // Проверка: залогинен ли пользователь
-    public async Task<bool> IsAuthenticatedAsync()
-    {
-        var token = await GetTokenAsync();
-        return !string.IsNullOrEmpty(token);
+        Preferences.Default.Remove(EmailKey);
     }
 }

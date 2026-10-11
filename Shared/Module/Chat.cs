@@ -6,5 +6,6 @@
         public bool IsGroup {  get; set; } = false;
         public List<User> Users { get; set; } = new();
         public List<Message> Messages { get; set; } = new();
-        public DateTime CreatedAt {  get; set; } = DateTime.Now;
+        public DateTime CreatedAt {  get; set; } = DateTime.UtcNow;
+        public ChatTypes TypeChat = ChatTypes.Group;
     }
